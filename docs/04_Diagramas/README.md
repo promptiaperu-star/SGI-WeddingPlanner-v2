@@ -1,3 +1,9 @@
-# Diagramas SGI
+# Diagramas
 
-Diagramas funcionales y operativos.
+Repositorio de diagramas e infografías oficiales.
+
+Incluye:
+
+- Flujo Novios
+- Flujo Wedding Planner
+- Arquitectura General
