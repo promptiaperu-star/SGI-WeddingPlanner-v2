@@ -1,3 +1,11 @@
 # Manual Técnico SGI v2
 
-Documentación técnica oficial del Sistema de Gestión de Invitados.
+Esta carpeta contendrá la documentación técnica oficial del proyecto.
+
+Contenido previsto:
+
+- Manual Técnico SGI v2 (.docx)
+- Manual Técnico SGI v2 (.pdf)
+- Arquitectura técnica
+- Especificaciones de desarrollo
+- Flujos internos
