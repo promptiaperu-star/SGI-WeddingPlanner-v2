@@ -1,3 +1,10 @@
-# Manual de Usuario SGI v2
+# Manual de Usuario
 
-Documentación funcional para Wedding Planner.
+Documentación destinada a Wedding Planner.
+
+Contenido previsto:
+
+- Manual de operación
+- Procedimientos
+- Buenas prácticas
+- Alertas críticas
