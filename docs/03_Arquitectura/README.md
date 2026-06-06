@@ -1,3 +1,9 @@
-# Arquitectura SGI v2
+# Arquitectura SGI
 
-Diagramas y arquitectura general del sistema.
+Documentación de la arquitectura lógica y física del sistema.
+
+Incluye:
+
+- Diagramas
+- Integraciones
+- Flujo Multi-Boda
