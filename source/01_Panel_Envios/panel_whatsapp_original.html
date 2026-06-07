@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Natalia - Confirmaciones Boda</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Montserrat', sans-serif; background: #f4f4f4; padding: 20px; display: flex; justify-content: center; }
+        .container { max-width: 600px; width: 100%; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; }
+        h2 { color: #c9a96e; margin-bottom: 10px; }
+        .status { font-size: 11px; margin-bottom: 20px; padding: 10px; border-radius: 5px; font-weight: bold; background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        label { display: block; text-align: left; font-weight: 600; margin-bottom: 10px; font-size: 14px; color: #555; }
+        select { width: 100%; padding: 15px; margin-bottom: 20px; border-radius: 10px; border: 2px solid #c9a96e; font-size: 16px; background: #fff; color: #333; }
+        button { width: 100%; padding: 18px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 16px; background: #25d366; color: white; box-shadow: 0 4px 10px rgba(37,211,102,0.3); }
+        #preview { margin-top: 20px; padding: 20px; background: #f9f9f9; border-radius: 10px; text-align: left; font-size: 13px; display: none; border: 1px solid #eee; white-space: pre-wrap; color: #333; line-height: 1.6; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Panel de Natalia</h2>
+    <div id="status" class="status">Sincronizando con Lista Oficial...</div>
+
+    <label>Selecciona el nombre completo del invitado:</label>
+    <select id="listaInvitados" onchange="generarVistaPrevia()">
+        <option value="">Cargando lista...</option>
+    </select>
+
+    <div id="preview"></div>
+    <button onclick="enviarWhatsApp()">ENVIAR MENSAJE DE CONFIRMACIÓN</button>
+</div>
+
+<script>
+    const URL_EXCEL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRsC2tQ5dtEP8VThZCz-lRejxGpu0qSM7o04SwWdPvOZ1eoE3rA-XskXZKxUVjIJZlNx7zAzI-X4piV/pub?output=csv';
+
+    let baseDatosInvitados = [];
+
+    function procesarCSV(texto) {
+        const lineas = texto.split(/\r?\n/);
+        return lineas.map(linea => {
+            const c = [];
+            let f = false, curr = '';
+            for (let i = 0; i < linea.length; i++) {
+                let char = linea[i];
+                if (char === '"' && linea[i+1] === '"') { curr += '"'; i++; }
+                else if (char === '"') { f = !f; }
+                else if (char === ',' && !f) { c.push(curr); curr = ''; }
+                else { curr += char; }
+            }
+            c.push(curr);
+            return c;
+        });
+    }
+
+    async function obtenerDatos() {
+        try {
+            const res = await fetch(URL_EXCEL + '&t=' + new Date().getTime());
+            const csvText = await res.text();
+            const filas = procesarCSV(csvText).slice(1); 
+            const select = document.getElementById('listaInvitados');
+            select.innerHTML = '<option value="">-- BUSCAR POR NOMBRE COMPLETO --</option>';
+
+            filas.forEach(columnas => {
+                if (columnas.length >= 4) {
+                    const nombreCompleto = columnas[1].trim();
+                    const nroPases = columnas[2].trim();
+                    // Limpiamos el número de símbolos como ( ) - o espacios
+                    const celular = columnas[3].trim().replace(/\D/g,''); 
+                    
+                    if (nombreCompleto) {
+                        baseDatosInvitados.push({ nombre: nombreCompleto, pases: nroPases, telefono: celular });
+                        const opt = document.createElement('option');
+                        opt.value = nombreCompleto;
+                        opt.textContent = nombreCompleto.toUpperCase();
+                        select.appendChild(opt);
+                    }
+                }
+            });
+            document.getElementById('status').innerText = `✅ ${baseDatosInvitados.length} INVITADOS CARGADOS`;
+        } catch (err) {
+            document.getElementById('status').innerText = "❌ ERROR AL CARGAR EXCEL";
+        }
+    }
+
+    function generarVistaPrevia() {
+        const seleccionado = document.getElementById('listaInvitados').value;
+        const invitado = baseDatosInvitados.find(i => i.nombre === seleccionado);
+        const box = document.getElementById('preview');
+
+        if (invitado) {
+            const nombreURL = encodeURIComponent(invitado.nombre.replace(/\s+/g, '_'));
+            const linkFinal = `https://gustavogapitomesta.github.io/Confirmaciones---Invitados/confirmar.html?id=${nombreURL}&pases=${invitado.pases}`;
+
+            const mensaje = `Hola, estimado(a) *${invitado.nombre.toUpperCase()}* 🤍
+
+Te escribe *Natalia Rodas*, wedding planner de *Jimena & Jorge*.
+
+En nombre de los novios, me comunico personalmente para confirmar tu lugar en este día tan especial.
+
+📅 Sábado, 11 de Julio del 2026
+📍 *Vichayito - Máncora*
+
+A Jimena & Jorge les encantaría contar con tu presencia, por ello han reservado *${invitado.pases} pase(s)* exclusivamente para ti.
+
+💒 *Ceremonia Religiosa*
+💍 *Recepción y Fiesta*
+📍https://maps.app.goo.gl/uAEbdLBt4qfzUbh37?g_st=ic
+
+*Celebración reservada para adultos*
+
+Te enviamos más detalles sobre la boda:
+
+💌 https://noscasamoswujuu.wixstudio.com/jimenayjorge
+
+*_Te pedimos gentilmente confirmar tu asistencia ingresando al link hasta el día miércoles 20 de mayo:_*
+${linkFinal}
+
+Con cariño,
+*Natalia Rodas*
+Wedding Planner`;
+            
+            box.innerText = mensaje;
+            box.style.display = "block";
+            return { texto: mensaje, telefono: invitado.telefono };
+        }
+        box.style.display = "none";
+        return null;
+    }
+
+    function enviarWhatsApp() {
+        const datos = generarVistaPrevia();
+        if (datos && datos.telefono) {
+            let num = datos.telefono;
+
+            // LÓGICA INTELIGENTE DE PREFIJO:
+            // Si el número tiene 9 dígitos (Formato Perú), agregamos 51
+            if (num.length === 9) {
+                num = "51" + num;
+            } 
+            // Si tiene más de 10 dígitos (Internacional), lo dejamos tal cual 
+            // porque ya trae su propio prefijo (ej: Leonor con 1315...)
+
+            const linkWA = `https://api.whatsapp.com/send?phone=${num}&text=${encodeURIComponent(datos.texto)}`;
+            window.open(linkWA, "_blank");
+        } else if (datos && !datos.telefono) {
+            alert("No hay teléfono registrado para este invitado.");
+        }
+    }
+
+    obtenerDatos();
+</script>
+</body>
+</html>
