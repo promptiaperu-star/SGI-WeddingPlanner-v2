@@ -41,3 +41,16 @@ Pendiente de diseño y desarrollo.
 
 Observación:
 Actualmente el análisis se realiza mediante Google Sheets / Panel de Contraste.
+
+## Dashboard Ejecutivo v3 UX
+
+Estado: En desarrollo
+
+Archivo actual:
+source/03_Dashboard/dashboard_v3_demo.html
+
+Próxima evolución:
+source/03_Dashboard/dashboard_v3_ux.html
+
+Objetivo:
+Implementar Dashboard Multi-Boda basado en feedback operativo de Wedding Planner.
