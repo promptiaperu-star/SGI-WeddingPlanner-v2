@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Confirmación</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --gold: #c9a96e; --dark: #444; --light-gold: #fdfaf3; }
+        
+        body, html { 
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            font-family: 'Montserrat', sans-serif;
+            background-color: #000;
+            overflow: hidden;
+        }
+
+        .background-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
+        }
+
+        .background-container img {
+            width: 100%; height: 100%;
+            object-fit: cover;
+            object-position: center bottom; 
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0) 50%, rgba(0,0,0,0.2) 100%);
+            z-index: 2;
+        }
+
+        .content-wrapper {
+            position: relative;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; 
+            align-items: center;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 40px 0;
+            box-sizing: border-box;
+        }
+
+        /* RECUADRO REDUCIDO UN 20% Y CENTRADO */
+        .form-card { 
+            background: rgba(255, 255, 255, 0.96);
+            padding: 18px; 
+            border-radius: 12px; 
+            width: 260px; /* Ancho fijo reducido para evitar desbordes */
+            margin: 0 auto;;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            box-sizing: border-box;
+        }
+
+        h2 { color: var(--gold); font-size: 14px; margin: 0 0 10px 0; letter-spacing: 1px; font-weight: 600; text-transform: uppercase; }
+        
+        .info-pases { 
+            background: var(--light-gold); 
+            padding: 6px; 
+            border-radius: 6px; 
+            margin-bottom: 12px; 
+            font-size: 10px; 
+            color: var(--dark); 
+            border: 1px solid rgba(201, 169, 110, 0.3); 
+        }
+        
+        label { display: block; text-align: left; margin: 8px 0 4px; font-size: 8px; font-weight: 600; color: #888; text-transform: uppercase; }
+        
+        /* ESTILO ACORDE A LA FOTO (ELIMINA EL AZUL) */
+        select, input { 
+            width: 100%; padding: 10px; border-radius: 5px; 
+            border: 1px solid #ddd; 
+            font-family: 'Montserrat'; font-size: 12px; 
+            background: white; color: var(--dark);
+            margin-bottom: 5px;
+            outline: none;
+            -webkit-appearance: none; /* Quita el diseño azul de iOS/Android */
+            -moz-appearance: none;
+            appearance: none;
+        }
+
+        /* Pequeña flecha personalizada para el select ya que quitamos la original */
+        select {
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23c9a96e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+
+        .acomp-section { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #eee; display: none; }
+        
+        .btn-submit { 
+            width: 100%; padding: 12px; margin-top: 10px; border: none; border-radius: 5px; 
+            background: var(--gold); color: white; font-weight: bold; cursor: pointer; font-size: 12px; 
+            text-transform: uppercase;
+        }
+
+        @media (min-width: 768px) {
+            .content-wrapper { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="background-container">
+        <img src="novios.jpeg" id="bgImg">
+    </div>
+    
+    <div class="overlay"></div>
+
+    <div class="content-wrapper">
+        <div class="form-card" id="formCard">
+            <h2 id="saludo">HOLA</h2>
+            
+            <div class="info-pases" id="infoPases">Cargando...</div>
+
+            <form id="confirmForm">
+                <label>¿Confirmas tu asistencia?</label>
+                <select id="asistencia" required onchange="validarAsistencia()">
+                    <option value="SÍ">SÍ, ASISTIRÉ</option>
+                    <option value="NO">NO PODRÉ ASISTIR</option>
+                </select>
+
+                <div id="seccionCantidadPases">
+                    <label>Pases a confirmar:</label>
+                    <select id="pasesConfirmados" onchange="generarInputsAcomp()"></select>
+                </div>
+
+                <div id="acompSection" class="acomp-section">
+                    <label>Acompañantes:</label>
+                    <div id="inputsAcomp"></div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="btnSubmit">ENVIAR</button>
+            </form>
+        </div>
+    </div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const nombreURL = params.get('id') ? params.get('id').replace(/_/g, ' ') : "Invitado";
+    const pasesMax = parseInt(params.get('pases')) || 1;
+
+    document.getElementById('saludo').innerText = "¡HOLA, " + nombreURL.toUpperCase() + "!";
+    document.getElementById('infoPases').innerText = "Tienes " + pasesMax + " pase(s) reservado(s).";
+
+    const selectPases = document.getElementById('pasesConfirmados');
+    for (let i = 1; i <= pasesMax; i++) {
+        let opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = i;
+        selectPases.appendChild(opt);
+    }
+
+    // RESTRICCIÓN DE 1 PASO INVIOLABLE
+    if (pasesMax === 1) {
+        document.getElementById('seccionCantidadPases').style.display = "none";
+        document.getElementById('acompSection').style.display = "none";
+        selectPases.value = 1;
+    }
+
+    function validarAsistencia() {
+        const asiste = document.getElementById('asistencia').value;
+        const seccionPases = document.getElementById('seccionCantidadPases');
+        const seccionAcomp = document.getElementById('acompSection');
+
+        if (asiste === "NO") {
+            seccionPases.style.display = "none";
+            seccionAcomp.style.display = "none";
+        } else {
+            if (pasesMax > 1) {
+                seccionPases.style.display = "block";
+                generarInputsAcomp();
+            }
+        }
+    }
+
+    function generarInputsAcomp() {
+        const cantidad = parseInt(selectPases.value);
+        const container = document.getElementById('inputsAcomp');
+        const seccionAcomp = document.getElementById('acompSection');
+        container.innerHTML = "";
+
+        if (cantidad > 1) {
+            seccionAcomp.style.display = "block";
+            for (let i = 1; i < cantidad; i++) {
+                container.innerHTML += `<input type="text" class="nombre-acomp" placeholder="Nombre completo" required style="margin-bottom:6px;">`;
+            }
+        } else {
+            seccionAcomp.style.display = "none";
+        }
+    }
+
+    document.getElementById('confirmForm').onsubmit = function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnSubmit');
+        btn.disabled = true;
+        btn.innerText = "ENVIANDO...";
+
+        const nombresAcomp = Array.from(document.querySelectorAll('.nombre-acomp')).map(i => i.value).join(', ') || "Ninguno";
+        const urlScript = 'https://script.google.com/macros/s/AKfycbwOgIwOfJB2WAu2slVtCq8xRiTtd9D_8xZ4rc1gZpibBq9LAvn7AilcUkJf5_o2nRRB/exec'; 
+
+        const queryParams = new URLSearchParams({
+            p_nombre: nombreURL,
+            p_asiste: document.getElementById('asistencia').value,
+            p_pases: selectPases.value,
+            p_acomp: nombresAcomp
+        }).toString();
+
+        fetch(urlScript + "?" + queryParams, { method: 'POST', mode: 'no-cors' })
+        .then(() => {
+            document.getElementById('formCard').innerHTML = "<h3 style='color:var(--gold); font-size:14px;'>¡CONFIRMADO!</h3><p style='font-size:10px;'>Tu respuesta ha sido registrada. ¡Gracias!</p>";
+        }).catch(() => {
+            alert("Error de envío.");
+            btn.disabled = false;
+        });
+    }
+    if(pasesMax > 1) generarInputsAcomp();
+</script>
+</body>
+</html>
