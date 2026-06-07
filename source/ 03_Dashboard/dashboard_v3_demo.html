@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Ejecutivo SGI v3</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f4f4;
+      color: #222;
+    }
+
+    header {
+      background: #111827;
+      color: white;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 24px auto;
+      padding: 0 16px;
+    }
+
+    .selector {
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    select {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 14px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 14px;
+      color: #666;
+    }
+
+    .card p {
+      font-size: 32px;
+      margin: 12px 0 0;
+      font-weight: bold;
+    }
+
+    .section {
+      background: white;
+      padding: 20px;
+      border-radius: 14px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .progress-bar {
+      background: #ddd;
+      border-radius: 20px;
+      overflow: hidden;
+      height: 28px;
+    }
+
+    .progress {
+      height: 100%;
+      background: #16a34a;
+      color: white;
+      text-align: center;
+      line-height: 28px;
+      font-weight: bold;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background: #f1f1f1;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .btn {
+      display: block;
+      text-align: center;
+      padding: 14px;
+      background: #111827;
+      color: white;
+      text-decoration: none;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>SGI Wedding Planner v3</h1>
+  <p>Dashboard Ejecutivo Multi-Boda</p>
+</header>
+
+<div class="container">
+
+  <div class="selector">
+    <label><strong>Seleccionar boda:</strong></label>
+    <select id="bodaSelector" onchange="cargarBoda()">
+      <option value="B001">B001 - Jimena & Jorge</option>
+      <option value="B002">B002 - Dania & Carlos</option>
+      <option value="B003">B003 - Ana & Luis</option>
+    </select>
+  </div>
+
+  <div class="section">
+    <h2 id="tituloBoda">Jimena & Jorge</h2>
+    <p id="detalleBoda">Fecha: 11/07/2026 | Ciudad: Máncora | Wedding Planner: Natalia Rodas</p>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <h3>Invitados principales</h3>
+      <p id="invitados">0</p>
+    </div>
+    <div class="card">
+      <h3>Pases asignados</h3>
+      <p id="pases">0</p>
+    </div>
+    <div class="card">
+      <h3>Confirmados</h3>
+      <p id="confirmados">0</p>
+    </div>
+    <div class="card">
+      <h3>Pendientes</h3>
+      <p id="pendientes">0</p>
+    </div>
+    <div class="card">
+      <h3>No asistirán</h3>
+      <p id="noAsisten">0</p>
+    </div>
+    <div class="card">
+      <h3>Pases liberados</h3>
+      <p id="liberados">0</p>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Avance de confirmaciones</h2>
+    <div class="progress-bar">
+      <div class="progress" id="avance">0%</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Estado de mesas</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Indicador</th>
+          <th>Resultado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Mesas completas</td>
+          <td id="mesasCompletas">0</td>
+        </tr>
+        <tr>
+          <td>Mesas pendientes</td>
+          <td id="mesasPendientes">0</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>Acciones rápidas</h2>
+    <div class="actions">
+      <a href="#" class="btn">Abrir Panel WhatsApp</a>
+      <a href="#" class="btn">Abrir Confirmaciones</a>
+      <a href="#" class="btn">Abrir Google Sheet</a>
+      <a href="#" class="btn">Abrir Gestión de Mesas</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const bodas = {
+    B001: {
+      nombre: "Jimena & Jorge",
+      fecha: "11/07/2026",
+      ciudad: "Máncora",
+      planner: "Natalia Rodas",
+      invitados: 180,
+      pases: 260,
+      confirmados: 145,
+      pendientes: 25,
+      noAsisten: 10,
+      liberados: 18,
+      mesasCompletas: 15,
+      mesasPendientes: 4
+    },
+    B002: {
+      nombre: "Dania & Carlos",
+      fecha: "25/07/2026",
+      ciudad: "Chiclayo",
+      planner: "Natalia Rodas",
+      invitados: 220,
+      pases: 310,
+      confirmados: 120,
+      pendientes: 80,
+      noAsisten: 20,
+      liberados: 25,
+      mesasCompletas: 10,
+      mesasPendientes: 12
+    },
+    B003: {
+      nombre: "Ana & Luis",
+      fecha: "08/08/2026",
+      ciudad: "Piura",
+      planner: "Natalia Rodas",
+      invitados: 150,
+      pases: 210,
+      confirmados: 90,
+      pendientes: 45,
+      noAsisten: 15,
+      liberados: 22,
+      mesasCompletas: 8,
+      mesasPendientes: 7
+    }
+  };
+
+  function cargarBoda() {
+    const id = document.getElementById("bodaSelector").value;
+    const boda = bodas[id];
+
+    document.getElementById("tituloBoda").innerText = boda.nombre;
+    document.getElementById("detalleBoda").innerText =
+      `Fecha: ${boda.fecha} | Ciudad: ${boda.ciudad} | Wedding Planner: ${boda.planner}`;
+
+    document.getElementById("invitados").innerText = boda.invitados;
+    document.getElementById("pases").innerText = boda.pases;
+    document.getElementById("confirmados").innerText = boda.confirmados;
+    document.getElementById("pendientes").innerText = boda.pendientes;
+    document.getElementById("noAsisten").innerText = boda.noAsisten;
+    document.getElementById("liberados").innerText = boda.liberados;
+    document.getElementById("mesasCompletas").innerText = boda.mesasCompletas;
+    document.getElementById("mesasPendientes").innerText = boda.mesasPendientes;
+
+    const avance = Math.round((boda.confirmados / boda.invitados) * 100);
+    document.getElementById("avance").style.width = avance + "%";
+    document.getElementById("avance").innerText = avance + "%";
+  }
+
+  cargarBoda();
+</script>
+
+</body>
+</html>
