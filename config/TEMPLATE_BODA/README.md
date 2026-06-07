@@ -6,9 +6,9 @@ Cada nuevo evento deberá copiar esta estructura.
 
 Ejemplo:
 
-B001_Jimena_Jorge
-B002_Dania_Carlos
-B003_Ana_Luis
+- B001_Jimena_Jorge
+- B002_Dania_Carlos
+- B003_Ana_Luis
 
 Elementos configurables:
 
