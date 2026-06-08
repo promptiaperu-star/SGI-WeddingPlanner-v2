@@ -188,3 +188,11 @@ function probarDashboard() {
   const data = obtenerDashboard();
   Logger.log(JSON.stringify(data, null, 2));
 }
+
+function doGet() {
+  const data = obtenerDashboard();
+
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
