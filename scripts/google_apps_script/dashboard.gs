@@ -1,8 +1,3 @@
-/**
- * Dashboard Ejecutivo SGI v3
- * Backend para lectura de Google Sheets Maestro Multi-Boda.
- */
-
 function obtenerDashboard() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
@@ -18,11 +13,10 @@ function obtenerDashboard() {
 
   const bodas = leerBodas_(hojaBodas);
   const confirmaciones = leerConfirmaciones_(hojaConfirmaciones);
-
   const bodasActivas = bodas.map(boda => construirResumenBoda_(boda, confirmaciones));
 
   return {
-    fechaActualizacion: new Date(),
+    fechaActualizacion: formatearFechaCompleta_(new Date()),
     totalBodas: bodasActivas.length,
     bodasActivas: bodasActivas,
     alertas: construirAlertas_(bodasActivas),
@@ -34,18 +28,16 @@ function leerBodas_(hoja) {
   const data = hoja.getDataRange().getValues();
   data.shift();
 
-  return data
-    .map(row => ({
-      codigo: row[0],
-      nombre: row[1],
-      fechaBoda: row[2],
-      ciudad: row[3],
-      estado: row[4],
-      inicioConfirmacion: row[5],
-      cierreConfirmacion: row[6],
-      totalPases: Number(row[7]) || 0
-    }))
-    .filter(b => b.codigo);
+  return data.map(row => ({
+    codigo: row[0],
+    nombre: row[1],
+    fechaBoda: row[2],
+    ciudad: row[3],
+    estado: row[4],
+    inicioConfirmacion: row[5],
+    cierreConfirmacion: row[6],
+    totalPases: Number(row[7]) || 0
+  })).filter(boda => boda.codigo);
 }
 
 function leerConfirmaciones_(hoja) {
@@ -71,7 +63,7 @@ function construirResumenBoda_(boda, confirmaciones) {
 
   const noAsisten = respuestas
     .filter(r => r.asiste === "no")
-    .reduce((sum, r) => sum + r.pases, 0);
+    .reduce((sum, r) => sum + r.pasesLiberados, 0);
 
   const pasesLiberados = respuestas
     .reduce((sum, r) => sum + r.pasesLiberados, 0);
@@ -88,11 +80,11 @@ function construirResumenBoda_(boda, confirmaciones) {
   return {
     codigo: boda.codigo,
     nombre: boda.nombre,
-    fechaBoda: boda.fechaBoda,
+    fechaBoda: formatearFechaCompleta_(boda.fechaBoda),
     ciudad: boda.ciudad,
     estado: boda.estado,
-    inicioConfirmacion: boda.inicioConfirmacion,
-    cierreConfirmacion: boda.cierreConfirmacion,
+    inicioConfirmacion: formatearFechaCompleta_(boda.inicioConfirmacion),
+    cierreConfirmacion: formatearFechaCompleta_(boda.cierreConfirmacion),
     totalPases: boda.totalPases,
     siAsisten: siAsisten,
     noAsisten: noAsisten,
@@ -125,16 +117,18 @@ function construirAlertas_(bodas) {
   const alertas = [];
 
   bodas.forEach(boda => {
+    const etiqueta = `${boda.codigo} - ${boda.nombre}`;
+
     if (boda.pendientes > 0) {
-      alertas.push(`${boda.codigo} tiene ${boda.pendientes} pases pendientes de confirmar.`);
+      alertas.push(`${etiqueta} tiene ${boda.pendientes} pases pendientes de confirmar.`);
     }
 
     if (boda.diasCierre <= 7 && boda.diasCierre >= 0) {
-      alertas.push(`${boda.codigo} cierra confirmaciones en ${boda.diasCierre} días.`);
+      alertas.push(`${etiqueta} cierra confirmaciones en ${boda.diasCierre} días.`);
     }
 
     if (boda.avance < 50 && boda.estado !== "No iniciado") {
-      alertas.push(`${boda.codigo} tiene avance menor al 50%.`);
+      alertas.push(`${etiqueta} tiene avance menor al 50%.`);
     }
   });
 
@@ -147,7 +141,7 @@ function construirEvolucion_(respuestas) {
   respuestas
     .filter(r => r.asiste === "si")
     .forEach(r => {
-      const fecha = formatearFecha_(r.fecha);
+      const fecha = formatearFechaCorta_(r.fecha);
       agrupado[fecha] = (agrupado[fecha] || 0) + r.pases;
     });
 
@@ -166,12 +160,20 @@ function calcularDiasHasta_(fecha) {
   return Math.ceil((objetivo - hoy) / (1000 * 60 * 60 * 24));
 }
 
-function formatearFecha_(fecha) {
+function formatearFechaCorta_(fecha) {
   if (fecha instanceof Date) {
     return Utilities.formatDate(fecha, Session.getScriptTimeZone(), "dd/MM");
   }
 
-  return String(fecha);
+  return String(fecha || "");
+}
+
+function formatearFechaCompleta_(fecha) {
+  if (fecha instanceof Date) {
+    return Utilities.formatDate(fecha, Session.getScriptTimeZone(), "dd/MM/yyyy");
+  }
+
+  return String(fecha || "");
 }
 
 function normalizarTexto_(valor) {
@@ -180,4 +182,9 @@ function normalizarTexto_(valor) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
+}
+
+function probarDashboard() {
+  const data = obtenerDashboard();
+  Logger.log(JSON.stringify(data, null, 2));
 }
