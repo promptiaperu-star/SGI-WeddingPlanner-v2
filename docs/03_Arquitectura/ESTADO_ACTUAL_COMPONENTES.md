@@ -54,3 +54,19 @@ source/03_Dashboard/dashboard_v3_ux.html
 
 Objetivo:
 Implementar Dashboard Multi-Boda basado en feedback operativo de Wedding Planner.
+
+## Dashboard Ejecutivo SGI v3
+
+Estado: UX validado.
+
+Front-End:
+- dashboard_v3_ux.html
+
+Back-End pendiente:
+- dashboard.gs
+
+Origen de datos:
+- Google Sheets Maestro Multi-Boda
+
+Próxima fase:
+- Integración dinámica mediante Apps Script.
