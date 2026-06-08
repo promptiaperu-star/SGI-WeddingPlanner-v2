@@ -2,147 +2,695 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>SGI Wedding Planner v3 UX</title>
+<title>SGI | Natalia Rodas Wedding Planner</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
+:root{
+  --bg:#f5f5f3;
+  --white:#ffffff;
+  --soft:#eeeeec;
+  --mid:#d8d8d5;
+  --line:#c9c9c5;
+  --text:#111111;
+  --muted:#6f6f6b;
+  --dark:#1f1f1f;
+  --black:#000000;
+}
+
+*{box-sizing:border-box}
 
 body{
-    margin:0;
-    background:#f7f5f2;
-    font-family:Arial,sans-serif;
+  margin:0;
+  font-family:Inter, Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
 }
 
-header{
-    background:#111827;
-    color:white;
-    padding:30px;
-    text-align:center;
+.main{
+  width:92%;
+  max-width:1450px;
+  margin:44px auto;
 }
 
-.container{
-    width:90%;
-    max-width:1400px;
-    margin:25px auto;
+.header{
+  margin-bottom:34px;
+}
+
+.header h1{
+  font-size:44px;
+  margin:0;
+  letter-spacing:-1.2px;
+  color:var(--black);
+}
+
+.header p{
+  margin:10px 0 0;
+  color:var(--muted);
+  font-size:18px;
+}
+
+.kpi-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+  gap:22px;
+  margin-bottom:30px;
+}
+
+.kpi{
+  min-height:160px;
+  background:var(--white);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:28px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  box-shadow:0 14px 34px rgba(0,0,0,.035);
+}
+
+.kpi.dark{
+  background:var(--black);
+  color:var(--white);
+  border-color:var(--black);
+}
+
+.kpi .value{
+  font-size:50px;
+  font-weight:900;
+  line-height:1;
+}
+
+.kpi .label{
+  font-size:16px;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  font-weight:800;
+}
+
+.kpi.dark .label{
+  color:var(--white);
 }
 
 .section{
-    background:white;
-    padding:20px;
-    border-radius:14px;
-    margin-bottom:20px;
-    box-shadow:0 2px 8px rgba(0,0,0,.08);
+  background:var(--white);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:30px;
+  margin-bottom:28px;
+  box-shadow:0 14px 34px rgba(0,0,0,.035);
 }
 
-.cards{
-    display:grid;
-    grid-template-columns:repeat(4,1fr);
-    gap:15px;
+.section h2{
+  margin:0 0 22px;
+  font-size:26px;
+  letter-spacing:-.4px;
 }
 
-.card{
-    background:#fafafa;
-    border-radius:12px;
-    padding:20px;
-    text-align:center;
+.boda-list{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(360px,1fr));
+  gap:22px;
 }
 
-.bodas{
-    display:grid;
-    grid-template-columns:repeat(2,1fr);
-    gap:20px;
+.boda-card{
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:26px;
+  cursor:pointer;
+  transition:.2s;
+  background:#fff;
 }
 
-.boda{
-    border:1px solid #ddd;
-    border-radius:12px;
-    padding:20px;
+.boda-card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 18px 40px rgba(0,0,0,.08);
 }
 
-button{
-    background:#111827;
-    color:white;
-    border:none;
-    padding:10px 18px;
-    border-radius:8px;
-    cursor:pointer;
+.boda-card h3{
+  font-size:28px;
+  margin:0 0 14px;
 }
 
+.meta{
+  color:var(--muted);
+  font-size:15px;
+  line-height:1.8;
+}
+
+.estado{
+  margin-top:18px;
+  font-weight:900;
+  color:var(--dark);
+}
+
+.alert{
+  background:#f1f1ef;
+  border:1px solid var(--line);
+  border-left:5px solid var(--black);
+  padding:18px;
+  border-radius:14px;
+  margin-top:14px;
+  font-weight:700;
+}
+
+.hidden{display:none}
+
+.back{
+  margin-bottom:24px;
+  background:transparent;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:13px 20px;
+  cursor:pointer;
+  font-weight:800;
+}
+
+.hero-boda{
+  display:grid;
+  grid-template-columns:1fr 340px;
+  gap:26px;
+  align-items:center;
+}
+
+.boda-info{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+
+.boda-info ul{
+  margin:18px 0 0;
+  padding-left:22px;
+  color:var(--muted);
+  line-height:2;
+  font-size:16px;
+}
+
+.photo-box{
+  background:var(--soft);
+  border:1px solid var(--line);
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:250px;
+  color:var(--muted);
+  font-weight:800;
+  text-align:center;
+  padding:20px;
+}
+
+.progress-panel{
+  background:var(--black);
+  color:var(--white);
+  border-radius:18px;
+  padding:28px;
+  margin-bottom:28px;
+}
+
+.progress-panel h2{
+  margin:0 0 20px;
+}
+
+.progress-scale{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  gap:16px;
+  align-items:center;
+}
+
+.progress-track{
+  height:28px;
+  background:#3a3a3a;
+  border-radius:999px;
+  overflow:hidden;
+}
+
+.progress-fill{
+  height:100%;
+  background:var(--white);
+  border-radius:999px;
+}
+
+.progress-percent{
+  font-size:42px;
+  font-weight:900;
+  margin-top:18px;
+}
+
+.formula-grid{
+  display:grid;
+  grid-template-columns:1fr auto 1fr auto 1fr auto 1fr auto 1fr;
+  gap:12px;
+  align-items:center;
+  margin-bottom:30px;
+}
+
+.operator{
+  font-size:34px;
+  font-weight:900;
+  color:var(--muted);
+  text-align:center;
+}
+
+.kpi.formula .label{
+  font-size:18px;
+  line-height:1.2;
+}
+
+.distribucion{
+  display:grid;
+  grid-template-columns:1fr;
+}
+
+.vertical-chart{
+  display:flex;
+  align-items:flex-end;
+  gap:34px;
+  min-height:360px;
+  padding:20px 10px 0;
+  border-top:1px solid var(--line);
+}
+
+.vbar-wrap{
+  flex:1;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-end;
+  height:330px;
+}
+
+.vbar{
+  width:70px;
+  background:var(--dark);
+  border-radius:14px 14px 0 0;
+  min-height:8px;
+}
+
+.vbar-label{
+  margin-top:12px;
+  font-size:14px;
+  color:var(--muted);
+  font-weight:800;
+}
+
+.line-chart-wrap{
+  display:grid;
+  grid-template-columns:54px 1fr;
+  gap:16px;
+  align-items:end;
+}
+
+.y-axis{
+  height:300px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  font-size:12px;
+  color:var(--muted);
+  text-align:right;
+  padding-bottom:22px;
+}
+
+.line-chart-area{
+  position:relative;
+}
+
+.line-chart{
+  height:300px;
+  border-left:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  position:relative;
+  overflow:hidden;
+}
+
+.line-svg{
+  width:100%;
+  height:100%;
+}
+
+.x-axis{
+  display:flex;
+  justify-content:space-between;
+  font-size:12px;
+  color:var(--muted);
+  margin-top:10px;
+}
+
+.workflow{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:18px;
+}
+
+.step{
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:20px;
+  background:#fff;
+  cursor:pointer;
+  transition:.2s;
+  text-align:left;
+}
+
+.step:hover{
+  background:var(--black);
+  color:var(--white);
+  transform:translateY(-3px);
+}
+
+.step strong{
+  display:block;
+  font-size:18px;
+  margin-bottom:10px;
+}
+
+.note{
+  color:var(--muted);
+  font-size:14px;
+  margin-top:16px;
+  line-height:1.6;
+}
+
+@media(max-width:980px){
+  .hero-boda{grid-template-columns:1fr}
+  .formula-grid{grid-template-columns:1fr}
+  .operator{display:none}
+  .header h1{font-size:32px}
+  .main{margin:28px auto}
+}
 </style>
 </head>
 
 <body>
 
-<header>
-<h1>SGI Wedding Planner v3</h1>
-<p>Centro de Control Multi-Boda</p>
-</header>
+<main class="main">
 
-<div class="container">
+<section id="home">
 
-<div class="section">
-<h2>Resumen Ejecutivo</h2>
+  <div class="header">
+    <h1>📬 Sistema de Gestión de Invitados</h1>
+    <p>Natalia Rodas – Wedding Planner</p>
+  </div>
 
-<div class="cards">
+  <div class="kpi-grid">
+    <div class="kpi dark">
+      <div class="value" id="totalBodas">3</div>
+      <div class="label">Bodas activas</div>
+    </div>
+    <div class="kpi dark">
+      <div class="value">7</div>
+      <div class="label">Alertas críticas</div>
+    </div>
+    <div class="kpi dark">
+      <div class="value">1</div>
+      <div class="label">Cierres próximos</div>
+    </div>
+  </div>
 
-<div class="card">
-<h3>Bodas Activas</h3>
-<h1>3</h1>
-</div>
+  <div class="section">
+    <h2>💍 Bodas vigentes</h2>
+    <div class="boda-list" id="listaBodas"></div>
+  </div>
 
-<div class="card">
-<h3>Invitados</h3>
-<h1>540</h1>
-</div>
+  <div class="section">
+    <h2>⚠️ Alertas críticas</h2>
+    <div id="alertasHome"></div>
+  </div>
 
-<div class="card">
-<h3>Confirmados</h3>
-<h1>421</h1>
-</div>
+</section>
 
-<div class="card">
-<h3>Alertas</h3>
-<h1>5</h1>
-</div>
+<section id="detalle" class="hidden">
 
-</div>
-</div>
+  <button class="back" onclick="volverHome()">← Volver al panel Multi-Boda</button>
 
-<div class="section">
+  <div class="section hero-boda">
+    <div class="boda-info">
+      <div class="header" style="margin-bottom:0">
+        <h1 id="nombreBoda"></h1>
+        <ul id="infoBoda"></ul>
+      </div>
+    </div>
+    <div class="photo-box">
+      Foto de los novios<br>
+      Pendiente de carga
+    </div>
+  </div>
 
-<h2>Bodas en Gestión</h2>
+  <div class="progress-panel">
+    <h2>Avance del proceso de confirmación</h2>
+    <div class="progress-scale">
+      <span>0%</span>
+      <div class="progress-track">
+        <div class="progress-fill" id="avanceBar"></div>
+      </div>
+      <span>100%</span>
+    </div>
+    <div class="progress-percent" id="avancePrincipal"></div>
+  </div>
 
-<div class="bodas">
+  <div class="formula-grid">
+    <div class="kpi formula"><div class="value" id="totalPases"></div><div class="label">Total pases</div></div>
+    <div class="operator">=</div>
+    <div class="kpi formula"><div class="value" id="siAsisten"></div><div class="label">Sí asistirán</div></div>
+    <div class="operator">+</div>
+    <div class="kpi formula"><div class="value" id="noAsisten"></div><div class="label">No asistirán</div></div>
+    <div class="operator">+</div>
+    <div class="kpi formula"><div class="value" id="pendientes"></div><div class="label">Pendientes respuesta</div></div>
+    <div class="operator">+</div>
+    <div class="kpi formula"><div class="value" id="liberados"></div><div class="label">Pases liberados</div></div>
+  </div>
 
-<div class="boda">
-<h3>Jimena & Jorge</h3>
-<p>Máncora</p>
-<p>11/07/2026</p>
-<button>Abrir Dashboard</button>
-</div>
+  <div class="section distribucion">
+    <h2>📊 Distribución de pases</h2>
+    <div class="vertical-chart" id="barras"></div>
+    <p class="note">Nota: la información no incluye a los novios. En el reporte final deberán agregarse ambos para calcular el total de platos.</p>
+  </div>
 
-<div class="boda">
-<h3>Dania & Carlos</h3>
-<p>Piura</p>
-<p>18/09/2026</p>
-<button>Abrir Dashboard</button>
-</div>
+  <div class="section">
+    <h2>📈 Evolución de pases que sí asistirán</h2>
+    <div class="line-chart-wrap">
+      <div class="y-axis" id="yAxis"></div>
+      <div class="line-chart-area">
+        <div class="line-chart">
+          <svg class="line-svg" id="lineChart" viewBox="0 0 800 300" preserveAspectRatio="none"></svg>
+        </div>
+        <div class="x-axis" id="xAxis"></div>
+      </div>
+    </div>
+    <p class="note">Eje Y: número de pases confirmados por día. Eje X: fechas del proceso de confirmación.</p>
+  </div>
 
-</div>
+  <div class="section">
+    <h2>⚠️ Alertas del proceso de confirmación de invitados</h2>
+    <div id="alertasBoda"></div>
+  </div>
 
-</div>
+  <div class="section">
+    <h2>Flujo de Trabajo SGI</h2>
+    <div class="workflow">
+      <button class="step" onclick="abrirModulo('lista')"><strong>1. Lista de invitados</strong>Visualización de la lista generada desde Tally.</button>
+      <button class="step" onclick="abrirModulo('whatsapp')"><strong>2. Envío WhatsApp</strong>Previsualización y envío del mensaje personalizado.</button>
+      <button class="step" onclick="abrirModulo('confirmaciones')"><strong>3. Reporte de confirmaciones</strong>Detalle por estado y número de pases.</button>
+      <button class="step" onclick="abrirModulo('mesas')"><strong>4. Distribución de mesas</strong>Asignación final con regla máxima de 10 invitados por mesa.</button>
+    </div>
+  </div>
 
-<div class="section">
+</section>
 
-<h2>Alertas Operativas</h2>
+</main>
 
-<ul>
-<li>3 invitados sin mesa asignada.</li>
-<li>5 confirmaciones pendientes de revisión.</li>
-<li>1 boda requiere actualización de invitados.</li>
-</ul>
+<script>
+const bodas = [
+  {
+    id:"B001",
+    nombre:"Jimena & Jorge",
+    fecha:"11/07/2026",
+    ciudad:"Máncora",
+    estado:"Esperando respuestas",
+    inicioConfirmacion:"11/06/2026",
+    cierreConfirmacion:"30/06/2026",
+    totalPases:260,
+    si:145,
+    no:10,
+    pendientes:87,
+    liberados:18,
+    evolucion:[12,23,18,19,17,21,35],
+    fechas:["11/06","14/06","17/06","20/06","23/06","26/06","30/06"]
+  },
+  {
+    id:"B002",
+    nombre:"Dania & Carlos",
+    fecha:"18/09/2026",
+    ciudad:"Piura",
+    estado:"No iniciado",
+    inicioConfirmacion:"18/08/2026",
+    cierreConfirmacion:"05/09/2026",
+    totalPases:310,
+    si:0,
+    no:0,
+    pendientes:310,
+    liberados:0,
+    evolucion:[0,0,0,0,0,0,0],
+    fechas:["18/08","21/08","24/08","27/08","30/08","02/09","05/09"]
+  },
+  {
+    id:"B003",
+    nombre:"Ana & Luis",
+    fecha:"25/09/2026",
+    ciudad:"Chiclayo",
+    estado:"Mensajes enviados",
+    inicioConfirmacion:"25/08/2026",
+    cierreConfirmacion:"10/09/2026",
+    totalPases:210,
+    si:90,
+    no:15,
+    pendientes:83,
+    liberados:22,
+    evolucion:[10,12,13,15,14,11,15],
+    fechas:["25/08","28/08","31/08","03/09","06/09","08/09","10/09"]
+  }
+];
 
-</div>
+function diasHasta(fecha){
+  const hoy = new Date();
+  const [d,m,y] = fecha.split("/");
+  const objetivo = new Date(`${y}-${m}-${d}`);
+  return Math.ceil((objetivo - hoy)/(1000*60*60*24));
+}
 
-</div>
+function cargarHome(){
+  const cont = document.getElementById("listaBodas");
+  const alertas = document.getElementById("alertasHome");
+  cont.innerHTML = "";
+  alertas.innerHTML = "";
+
+  bodas.forEach(b=>{
+    const diasInicio = diasHasta(b.inicioConfirmacion);
+
+    cont.innerHTML += `
+      <div class="boda-card" onclick="abrirBoda('${b.id}')">
+        <h3>${b.id} – ${b.nombre}</h3>
+        <div class="meta">
+          Fecha del evento: ${b.fecha}<br>
+          Lugar del evento: ${b.ciudad}<br>
+          Estado de confirmación: ${b.estado}
+        </div>
+        <div class="estado">Abrir avance de boda</div>
+      </div>
+    `;
+
+    if(diasInicio <= 7 && diasInicio >= 0){
+      alertas.innerHTML += `<div class="alert">${b.id} inicia confirmaciones en ${diasInicio} días.</div>`;
+    }
+
+    if(b.pendientes > 0 && b.estado !== "No iniciado"){
+      alertas.innerHTML += `<div class="alert">${b.id} tiene ${b.pendientes} pases pendientes de confirmar.</div>`;
+    }
+  });
+}
+
+function abrirBoda(id){
+  const b = bodas.find(x=>x.id===id);
+
+  document.getElementById("home").classList.add("hidden");
+  document.getElementById("detalle").classList.remove("hidden");
+
+  document.getElementById("nombreBoda").innerText = b.nombre;
+  document.getElementById("infoBoda").innerHTML = `
+    <li>Fecha boda: ${b.fecha}</li>
+    <li>Ciudad: ${b.ciudad}</li>
+    <li>Fecha envío mensajes: ${b.inicioConfirmacion}</li>
+    <li>Fecha máxima confirmaciones: ${b.cierreConfirmacion}</li>
+    <li>Días para cierre: ${diasHasta(b.cierreConfirmacion)}</li>
+  `;
+
+  const avance = Math.round((b.si / b.totalPases) * 100);
+
+  document.getElementById("avancePrincipal").innerText = avance + "%";
+  document.getElementById("avanceBar").style.width = avance + "%";
+
+  document.getElementById("totalPases").innerText = b.totalPases;
+  document.getElementById("siAsisten").innerText = b.si;
+  document.getElementById("noAsisten").innerText = b.no;
+  document.getElementById("pendientes").innerText = b.pendientes;
+  document.getElementById("liberados").innerText = b.liberados;
+
+  const estados = [
+    ["Sí asistirán", b.si],
+    ["No asistirán", b.no],
+    ["Pendientes", b.pendientes],
+    ["Liberados", b.liberados]
+  ];
+
+  document.getElementById("barras").innerHTML = estados.map(e=>{
+    const pct = Math.max(8, Math.round((e[1]/b.totalPases)*100));
+    return `
+      <div class="vbar-wrap">
+        <div class="vbar" style="height:${pct * 2.8}px"></div>
+        <div class="vbar-label">${e[0]}<br><strong>${e[1]}</strong></div>
+      </div>
+    `;
+  }).join("");
+
+  dibujarLinea(b.evolucion,b.fechas);
+
+  document.getElementById("alertasBoda").innerHTML =
+    `<div class="alert">${b.pendientes} pases pendientes de confirmar.</div>
+     <div class="alert">Faltan ${diasHasta(b.cierreConfirmacion)} días para cerrar confirmaciones.</div>`;
+}
+
+function dibujarLinea(data,fechas){
+  const svg = document.getElementById("lineChart");
+  const yAxis = document.getElementById("yAxis");
+  const xAxis = document.getElementById("xAxis");
+
+  svg.innerHTML = "";
+  yAxis.innerHTML = "";
+  xAxis.innerHTML = "";
+
+  const max = Math.max(...data,1);
+  const escala = [max, Math.round(max*.75), Math.round(max*.5), Math.round(max*.25), 0];
+  yAxis.innerHTML = escala.map(v=>`<span>${v}</span>`).join("");
+  xAxis.innerHTML = fechas.map(f=>`<span>${f}</span>`).join("");
+
+  const puntos = data.map((v,i)=>{
+    const x = (i/(data.length-1))*760 + 20;
+    const y = 260 - (v/max)*220;
+    return `${x},${y}`;
+  }).join(" ");
+
+  svg.innerHTML = `
+    <polyline points="${puntos}" fill="none" stroke="#111111" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    ${data.map((v,i)=>{
+      const x = (i/(data.length-1))*760 + 20;
+      const y = 260 - (v/max)*220;
+      return `<circle cx="${x}" cy="${y}" r="5" fill="#111111"></circle>`;
+    }).join("")}
+  `;
+}
+
+function abrirModulo(tipo){
+  const mensajes = {
+    lista:"Abrir módulo: Lista de invitados.",
+    whatsapp:"Abrir módulo: Envío WhatsApp.",
+    confirmaciones:"Abrir módulo: Reporte de confirmaciones.",
+    mesas:"Abrir módulo: Distribución de mesas."
+  };
+  alert(mensajes[tipo]);
+}
+
+function volverHome(){
+  document.getElementById("detalle").classList.add("hidden");
+  document.getElementById("home").classList.remove("hidden");
+}
+
+cargarHome();
+</script>
 
 </body>
 </html>
