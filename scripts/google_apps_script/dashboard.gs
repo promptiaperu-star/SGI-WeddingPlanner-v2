@@ -1,6 +1,5 @@
 /****************************************************
  * SGI v3.1 - Backend Multi-Boda
- * Google Sheet: SGI_Dashboard_Maestro_v3
  ****************************************************/
 
 function obtenerDashboard() {
@@ -74,7 +73,11 @@ function leerInvitados_(hoja) {
       quienInvita: row[6],
       observaciones: row[7]
     }))
-    .filter(invitado => invitado.codigoBoda && invitado.idInvitado);
+    .filter(invitado =>
+      invitado.codigoBoda &&
+      invitado.idInvitado &&
+      invitado.invitadoPrincipal
+    );
 }
 
 function leerConfirmaciones_(hoja) {
@@ -118,7 +121,7 @@ function construirResumenBoda_(boda, invitados, confirmaciones) {
     .reduce((sum, r) => sum + r.pasesLiberados, 0);
 
   const pendientes = Math.max(
-    totalPases - siAsisten - noAsisten - pasesLiberados,
+    totalPases - siAsisten - pasesLiberados,
     0
   );
 
@@ -172,15 +175,19 @@ function construirAlertas_(bodas) {
   bodas.forEach(boda => {
     const etiqueta = `${boda.codigo} - ${boda.nombre}`;
 
-    if (boda.pendientes > 0) {
+    if (boda.totalPases > 0 && boda.pendientes > 0) {
       alertas.push(`${etiqueta} tiene ${boda.pendientes} pases pendientes de confirmar.`);
     }
 
-    if (boda.diasCierre <= 7 && boda.diasCierre >= 0) {
+    if (boda.totalPases > 0 && boda.diasCierre <= 7 && boda.diasCierre >= 0) {
       alertas.push(`${etiqueta} cierra confirmaciones en ${boda.diasCierre} días.`);
     }
 
-    if (boda.avance < 50 && normalizarTexto_(boda.estado) !== "no iniciado") {
+    if (
+      boda.totalPases > 0 &&
+      boda.avance < 50 &&
+      normalizarTexto_(boda.estado) !== "no iniciado"
+    ) {
       alertas.push(`${etiqueta} tiene avance menor al 50%.`);
     }
   });
@@ -210,6 +217,7 @@ function construirEvolucion_(respuestas) {
 
 function buscarInvitadoConfirmacion(codigoBoda, idInvitado) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
+
   const hojaInvitados = ss.getSheetByName("Invitados");
   const hojaBodas = ss.getSheetByName("Bodas");
 
@@ -267,7 +275,11 @@ function registrarConfirmacionInvitado(data) {
   const invitado = data.invitadoPrincipal;
   const asiste = String(data.asiste || "").toUpperCase();
   const pasesAsignados = Number(data.pasesAsignados) || 0;
-  const pasesConfirmados = asiste === "NO" ? 0 : Number(data.pasesConfirmados) || 0;
+
+  const pasesConfirmados = asiste === "NO"
+    ? 0
+    : Number(data.pasesConfirmados) || 0;
+
   const pasesLiberados = asiste === "NO"
     ? pasesAsignados
     : Math.max(pasesAsignados - pasesConfirmados, 0);
@@ -303,11 +315,19 @@ function doGet(e) {
 
   if (accion === "dashboard") {
     data = obtenerDashboard();
+
   } else if (accion === "buscarInvitado") {
     data = buscarInvitadoConfirmacion(
       e.parameter.boda,
       e.parameter.id
     );
+
+  } else if (e && e.parameter && e.parameter.boda && e.parameter.id) {
+    data = buscarInvitadoConfirmacion(
+      e.parameter.boda,
+      e.parameter.id
+    );
+
   } else {
     data = {
       error: true,
@@ -389,5 +409,19 @@ function probarDashboard() {
 
 function probarBuscarInvitado() {
   const data = buscarInvitadoConfirmacion("B001", "B001-001");
+  Logger.log(JSON.stringify(data, null, 2));
+}
+
+function probarRegistroConfirmacion() {
+  const data = registrarConfirmacionInvitado({
+    codigoBoda: "B001",
+    idInvitado: "B001-001",
+    invitadoPrincipal: "Carlos Pérez",
+    asiste: "SI",
+    pasesAsignados: 3,
+    pasesConfirmados: 2,
+    acompanantes: "Acompañante Prueba"
+  });
+
   Logger.log(JSON.stringify(data, null, 2));
 }
