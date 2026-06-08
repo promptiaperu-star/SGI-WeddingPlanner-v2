@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Confirmación de Asistencia | SGI</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --gold:#c9a96e;
+  --dark:#333333;
+  --light-gold:#fdfaf3;
+  --white:#ffffff;
+  --muted:#777777;
+}
+
+body, html{
+  margin:0;
+  padding:0;
+  min-height:100%;
+  width:100%;
+  font-family:'Montserrat', sans-serif;
+  background:#000;
+}
+
+.background-container{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  z-index:1;
+  background:#111;
+}
+
+.background-container img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center bottom;
+}
+
+.overlay{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:linear-gradient(to top, rgba(0,0,0,.08) 45%, rgba(0,0,0,.35) 100%);
+  z-index:2;
+}
+
+.content-wrapper{
+  position:relative;
+  z-index:3;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:34px 16px;
+  box-sizing:border-box;
+}
+
+.form-card{
+  background:rgba(255,255,255,.96);
+  width:300px;
+  max-width:92vw;
+  border-radius:14px;
+  padding:20px;
+  text-align:center;
+  box-shadow:0 10px 32px rgba(0,0,0,.42);
+  box-sizing:border-box;
+}
+
+h1{
+  color:var(--gold);
+  font-size:15px;
+  margin:0 0 8px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+}
+
+h2{
+  font-size:13px;
+  margin:0 0 12px;
+  color:var(--dark);
+  font-weight:600;
+}
+
+.info-pases{
+  background:var(--light-gold);
+  border:1px solid rgba(201,169,110,.35);
+  color:var(--dark);
+  border-radius:8px;
+  padding:9px;
+  font-size:11px;
+  line-height:1.5;
+  margin-bottom:12px;
+}
+
+label{
+  display:block;
+  text-align:left;
+  font-size:9px;
+  font-weight:700;
+  color:#777;
+  text-transform:uppercase;
+  margin:9px 0 4px;
+}
+
+select, input{
+  width:100%;
+  padding:10px;
+  border-radius:6px;
+  border:1px solid #ddd;
+  font-family:'Montserrat';
+  font-size:12px;
+  color:var(--dark);
+  background:white;
+  box-sizing:border-box;
+  outline:none;
+}
+
+select{
+  appearance:none;
+  background-image:url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23c9a96e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 10px center;
+}
+
+.acomp-section{
+  margin-top:8px;
+  padding-top:8px;
+  border-top:1px dashed #e5e5e5;
+  display:none;
+}
+
+.nombre-acomp{
+  margin-bottom:7px;
+}
+
+.btn-submit{
+  width:100%;
+  padding:12px;
+  margin-top:12px;
+  border:0;
+  border-radius:6px;
+  background:var(--gold);
+  color:white;
+  font-weight:700;
+  font-size:12px;
+  cursor:pointer;
+  text-transform:uppercase;
+}
+
+.btn-submit:disabled{
+  opacity:.7;
+  cursor:not-allowed;
+}
+
+.message{
+  font-size:11px;
+  line-height:1.6;
+  color:var(--dark);
+}
+
+.error{
+  color:#9b1c1c;
+  font-size:11px;
+  line-height:1.5;
+  background:#fff1f1;
+  border:1px solid #e2b3b3;
+  padding:10px;
+  border-radius:8px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="background-container">
+  <img src="novios.jpeg" id="bgImg" alt="Foto de los novios">
+</div>
+
+<div class="overlay"></div>
+
+<div class="content-wrapper">
+  <div class="form-card" id="formCard">
+    <h1 id="tituloNovios">Confirmación</h1>
+    <h2 id="saludo">Cargando invitación...</h2>
+
+    <div class="info-pases" id="infoPases">
+      Estamos validando tu invitación.
+    </div>
+
+    <form id="confirmForm" style="display:none;">
+      <label>¿Confirmas tu asistencia?</label>
+      <select id="asistencia" required onchange="validarAsistencia()">
+        <option value="SI">SÍ, ASISTIRÉ</option>
+        <option value="NO">NO PODRÉ ASISTIR</option>
+      </select>
+
+      <div id="seccionCantidadPases">
+        <label>Pases a confirmar:</label>
+        <select id="pasesConfirmados" onchange="generarInputsAcomp()"></select>
+      </div>
+
+      <div id="acompSection" class="acomp-section">
+        <label>Acompañantes:</label>
+        <div id="inputsAcomp"></div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="btnSubmit">Enviar confirmación</button>
+    </form>
+  </div>
+</div>
+
+<script>
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbz5ssZquHV8W_5A2WAQYsv-oTXa6NAea5jUQBZyZ0x-MgzbANC_lYtyq7D99M8988XczQ/exec";
+
+const params = new URLSearchParams(window.location.search);
+const codigoBoda = params.get("boda");
+const idInvitado = params.get("id");
+
+let invitacion = null;
+
+async function cargarInvitacion(){
+  if(!codigoBoda || !idInvitado){
+    mostrarError("El enlace de confirmación no es válido. Falta código de boda o ID de invitado.");
+    return;
+  }
+
+  try{
+    const url = `${WEBAPP_URL}?accion=buscarInvitado&boda=${encodeURIComponent(codigoBoda)}&id=${encodeURIComponent(idInvitado)}`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if(data.error){
+      mostrarError(data.mensaje || "No se encontró la invitación.");
+      return;
+    }
+
+    invitacion = data;
+    pintarInvitacion();
+
+  }catch(error){
+    console.error(error);
+    mostrarError("No se pudo cargar la invitación. Revisa tu conexión e intenta nuevamente.");
+  }
+}
+
+function pintarInvitacion(){
+  document.getElementById("tituloNovios").innerText = invitacion.novios || "Confirmación";
+  document.getElementById("saludo").innerText = `¡Hola, ${String(invitacion.invitadoPrincipal).toUpperCase()}!`;
+
+  document.getElementById("infoPases").innerHTML =
+    `Tienes <strong>${invitacion.pasesAsignados}</strong> pase(s) reservado(s).<br>` +
+    `Boda: ${invitacion.novios || ""}<br>` +
+    `Fecha: ${invitacion.fechaBoda || ""}`;
+
+  if(invitacion.fotoUrl){
+    document.getElementById("bgImg").src = invitacion.fotoUrl;
+  }
+
+  cargarSelectorPases();
+  document.getElementById("confirmForm").style.display = "block";
+}
+
+function cargarSelectorPases(){
+  const select = document.getElementById("pasesConfirmados");
+  select.innerHTML = "";
+
+  for(let i = 1; i <= Number(invitacion.pasesAsignados); i++){
+    const opt = document.createElement("option");
+    opt.value = i;
+    opt.textContent = i;
+    select.appendChild(opt);
+  }
+
+  if(Number(invitacion.pasesAsignados) === 1){
+    document.getElementById("seccionCantidadPases").style.display = "none";
+    document.getElementById("acompSection").style.display = "none";
+    select.value = 1;
+  }else{
+    generarInputsAcomp();
+  }
+}
+
+function validarAsistencia(){
+  const asiste = document.getElementById("asistencia").value;
+
+  if(asiste === "NO"){
+    document.getElementById("seccionCantidadPases").style.display = "none";
+    document.getElementById("acompSection").style.display = "none";
+  }else{
+    if(Number(invitacion.pasesAsignados) > 1){
+      document.getElementById("seccionCantidadPases").style.display = "block";
+      generarInputsAcomp();
+    }
+  }
+}
+
+function generarInputsAcomp(){
+  const cantidad = Number(document.getElementById("pasesConfirmados").value);
+  const container = document.getElementById("inputsAcomp");
+  const seccion = document.getElementById("acompSection");
+  container.innerHTML = "";
+
+  if(cantidad > 1){
+    seccion.style.display = "block";
+    for(let i = 1; i < cantidad; i++){
+      container.innerHTML += `<input type="text" class="nombre-acomp" placeholder="Nombre completo acompañante ${i}" required>`;
+    }
+  }else{
+    seccion.style.display = "none";
+  }
+}
+
+document.getElementById("confirmForm").onsubmit = async function(e){
+  e.preventDefault();
+
+  const btn = document.getElementById("btnSubmit");
+  btn.disabled = true;
+  btn.innerText = "Enviando...";
+
+  const asiste = document.getElementById("asistencia").value;
+  const pasesConfirmados = asiste === "NO" ? 0 : Number(document.getElementById("pasesConfirmados").value || 0);
+  const acompanantes = Array.from(document.querySelectorAll(".nombre-acomp"))
+    .map(input => input.value.trim())
+    .filter(Boolean)
+    .join("; ");
+
+  const payload = {
+    codigoBoda: invitacion.codigoBoda,
+    idInvitado: invitacion.idInvitado,
+    invitadoPrincipal: invitacion.invitadoPrincipal,
+    asiste: asiste,
+    pasesAsignados: invitacion.pasesAsignados,
+    pasesConfirmados: pasesConfirmados,
+    acompanantes: acompanantes || "Ninguno"
+  };
+
+  try{
+    await fetch(WEBAPP_URL, {
+      method: "POST",
+      mode: "no-cors",
+      body: JSON.stringify(payload)
+    });
+
+    document.getElementById("formCard").innerHTML =
+      `<h1>¡Confirmación registrada!</h1>
+       <p class="message">Tu respuesta ha sido enviada correctamente.<br>Muchas gracias.</p>`;
+
+  }catch(error){
+    console.error(error);
+    alert("No se pudo registrar la confirmación.");
+    btn.disabled = false;
+    btn.innerText = "Enviar confirmación";
+  }
+};
+
+function mostrarError(mensaje){
+  document.getElementById("formCard").innerHTML = `<div class="error">${mensaje}</div>`;
+}
+
+cargarInvitacion();
+</script>
+
+</body>
+</html>
