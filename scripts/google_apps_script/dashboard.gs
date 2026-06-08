@@ -1,19 +1,29 @@
+/****************************************************
+ * SGI v3.1 - Backend Multi-Boda
+ * Google Sheet: SGI_Dashboard_Maestro_v3
+ ****************************************************/
+
 function obtenerDashboard() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
   const hojaBodas = ss.getSheetByName("Bodas");
+  const hojaInvitados = ss.getSheetByName("Invitados");
   const hojaConfirmaciones = ss.getSheetByName("Confirmaciones");
 
-  if (!hojaBodas || !hojaConfirmaciones) {
+  if (!hojaBodas || !hojaInvitados || !hojaConfirmaciones) {
     return {
       error: true,
-      mensaje: "Faltan hojas requeridas: Bodas o Confirmaciones"
+      mensaje: "Faltan hojas requeridas: Bodas, Invitados o Confirmaciones."
     };
   }
 
   const bodas = leerBodas_(hojaBodas);
+  const invitados = leerInvitados_(hojaInvitados);
   const confirmaciones = leerConfirmaciones_(hojaConfirmaciones);
-  const bodasActivas = bodas.map(boda => construirResumenBoda_(boda, confirmaciones));
+
+  const bodasActivas = bodas.map(boda =>
+    construirResumenBoda_(boda, invitados, confirmaciones)
+  );
 
   return {
     fechaActualizacion: formatearFechaCompleta_(new Date()),
@@ -24,38 +34,77 @@ function obtenerDashboard() {
   };
 }
 
+/****************************************************
+ * LECTURA DE HOJAS
+ ****************************************************/
+
 function leerBodas_(hoja) {
   const data = hoja.getDataRange().getValues();
   data.shift();
 
-  return data.map(row => ({
-    codigo: row[0],
-    nombre: row[1],
-    fechaBoda: row[2],
-    ciudad: row[3],
-    estado: row[4],
-    inicioConfirmacion: row[5],
-    cierreConfirmacion: row[6],
-    totalPases: Number(row[7]) || 0
-  })).filter(boda => boda.codigo);
+  return data
+    .map(row => ({
+      codigo: row[0],
+      nombre: row[1],
+      fechaBoda: row[2],
+      ciudad: row[3],
+      inicioConfirmacion: row[4],
+      cierreConfirmacion: row[5],
+      estado: row[6],
+      fotoUrl: row[7],
+      tallyUrl: row[8],
+      htmlUrl: row[9],
+      observaciones: row[10]
+    }))
+    .filter(boda => boda.codigo);
+}
+
+function leerInvitados_(hoja) {
+  const data = hoja.getDataRange().getValues();
+  data.shift();
+
+  return data
+    .map(row => ({
+      codigoBoda: row[0],
+      idInvitado: row[1],
+      invitadoPrincipal: row[2],
+      pases: Number(row[3]) || 0,
+      celular: row[4],
+      categoria: row[5],
+      quienInvita: row[6],
+      observaciones: row[7]
+    }))
+    .filter(invitado => invitado.codigoBoda && invitado.idInvitado);
 }
 
 function leerConfirmaciones_(hoja) {
   const data = hoja.getDataRange().getValues();
   data.shift();
 
-  return data.map(row => ({
-    fecha: row[0],
-    codigoBoda: row[1],
-    invitado: row[2],
-    asiste: normalizarTexto_(row[3]),
-    pases: Number(row[4]) || 0,
-    pasesLiberados: Number(row[5]) || 0
-  }));
+  return data
+    .map(row => ({
+      fecha: row[0],
+      codigoBoda: row[1],
+      invitado: row[2],
+      asiste: normalizarTexto_(row[3]),
+      pases: Number(row[4]) || 0,
+      pasesLiberados: Number(row[5]) || 0,
+      acompanantes: row[6],
+      ip: row[7],
+      ultimaActualizacion: row[8]
+    }))
+    .filter(r => r.codigoBoda && r.invitado);
 }
 
-function construirResumenBoda_(boda, confirmaciones) {
+/****************************************************
+ * DASHBOARD
+ ****************************************************/
+
+function construirResumenBoda_(boda, invitados, confirmaciones) {
+  const invitadosBoda = invitados.filter(i => i.codigoBoda === boda.codigo);
   const respuestas = confirmaciones.filter(r => r.codigoBoda === boda.codigo);
+
+  const totalPases = invitadosBoda.reduce((sum, i) => sum + i.pases, 0);
 
   const siAsisten = respuestas
     .filter(r => r.asiste === "si")
@@ -69,12 +118,12 @@ function construirResumenBoda_(boda, confirmaciones) {
     .reduce((sum, r) => sum + r.pasesLiberados, 0);
 
   const pendientes = Math.max(
-    boda.totalPases - siAsisten - noAsisten - pasesLiberados,
+    totalPases - siAsisten - noAsisten - pasesLiberados,
     0
   );
 
-  const avance = boda.totalPases > 0
-    ? Math.round((siAsisten / boda.totalPases) * 100)
+  const avance = totalPases > 0
+    ? Math.round((siAsisten / totalPases) * 100)
     : 0;
 
   return {
@@ -85,7 +134,11 @@ function construirResumenBoda_(boda, confirmaciones) {
     estado: boda.estado,
     inicioConfirmacion: formatearFechaCompleta_(boda.inicioConfirmacion),
     cierreConfirmacion: formatearFechaCompleta_(boda.cierreConfirmacion),
-    totalPases: boda.totalPases,
+    fotoUrl: boda.fotoUrl,
+    tallyUrl: boda.tallyUrl,
+    htmlUrl: boda.htmlUrl,
+    totalInvitadosPrincipales: invitadosBoda.length,
+    totalPases: totalPases,
     siAsisten: siAsisten,
     noAsisten: noAsisten,
     pendientes: pendientes,
@@ -127,7 +180,7 @@ function construirAlertas_(bodas) {
       alertas.push(`${etiqueta} cierra confirmaciones en ${boda.diasCierre} días.`);
     }
 
-    if (boda.avance < 50 && boda.estado !== "No iniciado") {
+    if (boda.avance < 50 && normalizarTexto_(boda.estado) !== "no iniciado") {
       alertas.push(`${etiqueta} tiene avance menor al 50%.`);
     }
   });
@@ -150,6 +203,147 @@ function construirEvolucion_(respuestas) {
     pases: agrupado[fecha]
   }));
 }
+
+/****************************************************
+ * CONFIRMACIÓN DE INVITADOS
+ ****************************************************/
+
+function buscarInvitadoConfirmacion(codigoBoda, idInvitado) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hojaInvitados = ss.getSheetByName("Invitados");
+  const hojaBodas = ss.getSheetByName("Bodas");
+
+  if (!hojaInvitados || !hojaBodas) {
+    return {
+      error: true,
+      mensaje: "Faltan hojas Invitados o Bodas."
+    };
+  }
+
+  const invitados = leerInvitados_(hojaInvitados);
+  const bodas = leerBodas_(hojaBodas);
+
+  const invitado = invitados.find(i =>
+    String(i.codigoBoda).trim() === String(codigoBoda).trim() &&
+    String(i.idInvitado).trim() === String(idInvitado).trim()
+  );
+
+  if (!invitado) {
+    return {
+      error: true,
+      mensaje: "No se encontró el invitado."
+    };
+  }
+
+  const boda = bodas.find(b =>
+    String(b.codigo).trim() === String(codigoBoda).trim()
+  );
+
+  return {
+    error: false,
+    codigoBoda: codigoBoda,
+    idInvitado: idInvitado,
+    novios: boda ? boda.nombre : "",
+    fotoUrl: boda ? boda.fotoUrl : "",
+    fechaBoda: boda ? formatearFechaCompleta_(boda.fechaBoda) : "",
+    ciudad: boda ? boda.ciudad : "",
+    invitadoPrincipal: invitado.invitadoPrincipal,
+    pasesAsignados: invitado.pases
+  };
+}
+
+function registrarConfirmacionInvitado(data) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hoja = ss.getSheetByName("Confirmaciones");
+
+  if (!hoja) {
+    return {
+      error: true,
+      mensaje: "No existe la hoja Confirmaciones."
+    };
+  }
+
+  const codigoBoda = data.codigoBoda;
+  const invitado = data.invitadoPrincipal;
+  const asiste = String(data.asiste || "").toUpperCase();
+  const pasesAsignados = Number(data.pasesAsignados) || 0;
+  const pasesConfirmados = asiste === "NO" ? 0 : Number(data.pasesConfirmados) || 0;
+  const pasesLiberados = asiste === "NO"
+    ? pasesAsignados
+    : Math.max(pasesAsignados - pasesConfirmados, 0);
+
+  hoja.appendRow([
+    new Date(),
+    codigoBoda,
+    invitado,
+    asiste,
+    pasesConfirmados,
+    pasesLiberados,
+    data.acompanantes || "",
+    "",
+    new Date()
+  ]);
+
+  return {
+    error: false,
+    mensaje: "Confirmación registrada correctamente."
+  };
+}
+
+/****************************************************
+ * WEB APP
+ ****************************************************/
+
+function doGet(e) {
+  const accion = e && e.parameter && e.parameter.accion
+    ? e.parameter.accion
+    : "dashboard";
+
+  let data;
+
+  if (accion === "dashboard") {
+    data = obtenerDashboard();
+  } else if (accion === "buscarInvitado") {
+    data = buscarInvitadoConfirmacion(
+      e.parameter.boda,
+      e.parameter.id
+    );
+  } else {
+    data = {
+      error: true,
+      mensaje: "Acción no reconocida."
+    };
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  let payload = {};
+
+  try {
+    payload = JSON.parse(e.postData.contents);
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        error: true,
+        mensaje: "Payload inválido."
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  const data = registrarConfirmacionInvitado(payload);
+
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+/****************************************************
+ * UTILIDADES
+ ****************************************************/
 
 function calcularDiasHasta_(fecha) {
   if (!fecha) return 0;
@@ -184,15 +378,16 @@ function normalizarTexto_(valor) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
+/****************************************************
+ * PRUEBAS
+ ****************************************************/
+
 function probarDashboard() {
   const data = obtenerDashboard();
   Logger.log(JSON.stringify(data, null, 2));
 }
 
-function doGet() {
-  const data = obtenerDashboard();
-
-  return ContentService
-    .createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
+function probarBuscarInvitado() {
+  const data = buscarInvitadoConfirmacion("B001", "B001-001");
+  Logger.log(JSON.stringify(data, null, 2));
 }
