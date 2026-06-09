@@ -17,16 +17,18 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica
 .kpi{border-radius:14px;padding:24px}.kpi.dark{background:#000;color:#fff}.kpi.dark .label{color:#fff}.kpi .value{font-size:38px;font-weight:800;margin-bottom:6px}.kpi .label{color:var(--muted);font-weight:700;text-transform:uppercase;font-size:13px;letter-spacing:.3px}
 .section{border-radius:14px;padding:26px;margin-bottom:24px}.section h2{margin:0 0 18px;font-size:26px}
 .boda-list{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.boda-card{border:1px solid var(--border);border-radius:14px;padding:20px;background:#fff}.boda-card h3{margin:0 0 8px;font-size:21px}.boda-card p{margin:7px 0;color:var(--muted)}
-.btn{display:inline-block;background:var(--black);color:white;border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:pointer;margin-top:12px}.btn.secondary{background:white;color:black;border:1px solid var(--border)}.back{margin-bottom:20px}
+.btn{display:inline-block;background:var(--black);color:white;border:0;border-radius:10px;padding:12px 18px;font-weight:700;cursor:pointer;margin-top:12px;text-decoration:none}.btn.secondary{background:white;color:black;border:1px solid var(--border)}.btn.disabled{background:#999;cursor:not-allowed}.back{margin-bottom:20px}
 .bento{display:grid;grid-template-columns:2fr 1fr;gap:22px;align-items:stretch}.photo-box{border:1px solid var(--border);background:var(--soft);border-radius:14px;min-height:180px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-weight:700;padding:16px}.detail-title{font-size:42px;margin:0 0 18px}.info-list{margin:0;padding-left:18px;line-height:1.9}
 .black-panel{background:#000;color:white;border-radius:14px;padding:24px;margin-bottom:24px}.black-panel h2{margin:0 0 18px}.scale{display:grid;grid-template-columns:32px 1fr 46px;gap:8px;align-items:center;font-weight:700}.progress{background:#3f3f3f;height:22px;border-radius:22px;overflow:hidden}.progress-bar{height:100%;width:0%;background:#fff;border-radius:22px}.avance-number{font-size:38px;font-weight:900;margin-top:18px}
 .equation{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr auto 1fr;gap:12px;align-items:center;margin-bottom:24px}.metric{border-radius:12px;padding:20px;min-height:110px}.metric .num{font-size:38px;font-weight:900;line-height:1}.metric .name{font-size:14px;font-weight:800;color:var(--muted);margin-top:10px;text-transform:uppercase}.op{font-size:28px;font-weight:900;color:var(--muted);text-align:center}
 .chart-card{border-radius:14px;padding:26px;margin-bottom:24px}.chart-card h2{margin:0 0 18px}.bar-area{height:300px;display:flex;align-items:flex-end;justify-content:space-around;border-top:1px solid var(--border);padding:30px 30px 10px}.bar-wrap{text-align:center;width:120px}.vbar{width:56px;margin:0 auto 12px;background:#1f1f1f;border-radius:10px 10px 2px 2px;min-height:12px}.bar-label{font-size:12px;font-weight:700}.note{color:var(--muted);font-size:12px;margin-top:8px}
 .line-layout{display:grid;grid-template-columns:44px 1fr;gap:10px}.y-axis{height:280px;display:flex;flex-direction:column;justify-content:space-between;color:var(--muted);font-size:12px;text-align:right;padding-right:6px}.line-svg{width:100%;height:280px;border-left:1px solid var(--border);border-bottom:1px solid var(--border)}.x-axis{margin-left:54px;display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-top:8px}
 .alert{border:1px solid var(--border);background:var(--soft);border-left:5px solid #000;border-radius:10px;padding:16px;margin-bottom:12px;font-weight:700}
-.flow-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}.flow-card{border:1px solid var(--border);border-radius:12px;padding:18px;background:white}.flow-card h3{margin:0 0 8px;font-size:16px}.flow-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.4}
+.flow-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}.flow-card{border:1px solid #000;border-radius:12px;padding:18px;background:#000;color:#fff;cursor:pointer;transition:.15s}.flow-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}.flow-card h3{margin:0 0 8px;font-size:16px;color:#fff}.flow-card p{margin:0;color:#fff;font-size:13px;line-height:1.4}
 .loading{padding:20px;color:var(--muted)}.error{background:#fff1f1;border:1px solid #e0b4b4;color:#991b1b;border-radius:12px;padding:18px;margin-bottom:20px;font-weight:700}
-@media(max-width:900px){.kpi-grid,.boda-list,.bento,.equation,.flow-grid{grid-template-columns:1fr}.op{display:none}.header h1,.detail-title{font-size:32px}}
+.table-wrap{overflow-x:auto}.sgi-table{width:100%;border-collapse:collapse;background:#fff}.sgi-table th,.sgi-table td{border:1px solid var(--border);padding:10px;text-align:left;font-size:13px}.sgi-table th{background:#111;color:#fff}.status-pill{display:inline-block;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700}.status-pending{background:#fff4cc}.status-sent{background:#dff5e1}.status-api{background:#e7e7ff}.action-grid{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 18px}
+.send-panel{display:grid;grid-template-columns:1fr 1fr;gap:20px}.send-card{border:1px solid var(--border);border-radius:14px;padding:20px;background:#fff}.send-card h3{margin-top:0}.msg-preview{white-space:pre-wrap;background:#f7f7f7;border:1px solid var(--border);border-radius:12px;padding:16px;max-height:360px;overflow:auto;font-size:13px;line-height:1.5}
+@media(max-width:900px){.kpi-grid,.boda-list,.bento,.equation,.flow-grid,.send-panel{grid-template-columns:1fr}.op{display:none}.header h1,.detail-title{font-size:32px}}
 </style>
 </head>
 <body>
@@ -38,7 +40,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica
   <div id="errorBox" class="error" style="display:none;"></div>
 
   <section id="home" class="screen active">
-    <div class="header"><h1>Sistema de Gestión de Invitados</h1><p>Natalia Rodas | Panel Multi-Boda</p></div>
+    <div class="header"><h1>Sistema de Gestión de Invitados</h1><p>Panel Multi-Boda</p></div>
     <div class="kpi-grid">
       <div class="kpi dark"><div class="value" id="totalBodas">0</div><div class="label">Bodas activas</div></div>
       <div class="kpi dark"><div class="value" id="totalAlertas">0</div><div class="label">Alertas críticas</div></div>
@@ -62,30 +64,249 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica
 
     <div class="equation">
       <div class="metric"><div class="num" id="totalPases">0</div><div class="name">Total pases</div></div><div class="op">=</div>
-      <div class="metric"><div class="num" id="siAsisten">0</div><div class="name">Sí asistirán</div></div><div class="op">+</div>
-      <div class="metric"><div class="num" id="noAsisten">0</div><div class="name">No asistirán</div></div><div class="op">+</div>
-      <div class="metric"><div class="num" id="pendientes">0</div><div class="name">Pendientes respuesta</div></div><div class="op">+</div>
-      <div class="metric"><div class="num" id="liberados">0</div><div class="name">Pases liberados</div></div>
+      <div class="metric"><div class="num" id="siAsisten">0</div><div class="name">Sí asisten</div></div><div class="op">+</div>
+      <div class="metric"><div class="num" id="noAsisten">0</div><div class="name">No asisten</div></div><div class="op">+</div>
+      <div class="metric"><div class="num" id="pendientes">0</div><div class="name">Pendientes de responder</div></div><div class="op">+</div>
+      <div class="metric"><div class="num" id="liberados">0</div><div class="name">Liberados</div></div>
     </div>
 
     <div class="chart-card"><h2>📊 Distribución de pases</h2><div class="bar-area" id="barras"></div><div class="note">Nota: la información no incluye a los novios. En el reporte final deberán agregarse ambos para calcular el total de platos.</div></div>
     <div class="chart-card"><h2>📈 Evolución de pases que sí asistirán</h2><div class="line-layout"><div class="y-axis" id="yAxis"></div><svg class="line-svg" id="lineChart" viewBox="0 0 820 280" preserveAspectRatio="none"></svg></div><div class="x-axis" id="xAxis"></div><div class="note">Eje Y: número de pases confirmados por día. Eje X: fechas del proceso de confirmación.</div></div>
     <div class="chart-card"><h2>⚠️ Alertas del proceso de confirmación de invitados</h2><div id="alertasBoda"></div></div>
-    <div class="chart-card"><h2>Flujo de Trabajo SGI</h2><div class="flow-grid"><div class="flow-card"><h3>1. Lista de invitados</h3><p>Visualización de la lista generada desde Tally.</p></div><div class="flow-card"><h3>2. Envío WhatsApp</h3><p>Previsualización y envío del mensaje personalizado.</p></div><div class="flow-card"><h3>3. Reporte de confirmaciones</h3><p>Detalle por estado y número de pases.</p></div><div class="flow-card"><h3>4. Distribución de mesas</h3><p>Asignación final con regla máxima de 10 invitados por mesa.</p></div></div></div>
+
+    <div class="chart-card">
+      <h2>Accesos rápidos</h2>
+      <div class="flow-grid">
+        <div class="flow-card" onclick="abrirModulo('lista')"><h3>1. Lista de Invitados</h3><p>Información generada por los novios desde su formulario inicial.</p></div>
+        <div class="flow-card" onclick="abrirModulo('whatsappManual')"><h3>2. Envío de mensajes Whsp Manual</h3><p>Sin costo y bloqueo temporal de Whsp.</p></div>
+        <div class="flow-card" onclick="abrirModulo('whatsappApi')"><h3>3. Envío de mensajes Whsp API</h3><p>Meta cobra por el servicio sin bloqueo de Whsp.</p></div>
+        <div class="flow-card" onclick="abrirModulo('reporte')"><h3>4. Reporte de invitados</h3><p>Detalle de invitados confirmados.</p></div>
+        <div class="flow-card" onclick="abrirModulo('mesas')"><h3>5. Distribución de mesas</h3><p>Detalle de asignación de mesas por cada invitado.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="listaInvitados" class="screen">
+    <button class="btn secondary back" onclick="volverDetalle()">← Volver al Dashboard de boda</button>
+    <div class="header"><h1>Lista de Invitados</h1><p id="tituloListaInvitados"></p></div>
+    <div class="section">
+      <div class="action-grid">
+        <button class="btn" onclick="descargarListaInvitadosExcel()">Descargar Excel</button>
+      </div>
+      <div id="tablaListaInvitados" class="table-wrap loading">Pendiente de conexión con Apps Script.</div>
+    </div>
+  </section>
+
+  <section id="envioManual" class="screen">
+    <button class="btn secondary back" onclick="volverDetalle()">← Volver al Dashboard de boda</button>
+    <div class="header"><h1>Envío de mensajes Whsp Manual</h1><p id="tituloEnvioManual"></p></div>
+    <div class="send-panel">
+      <div class="send-card">
+        <h3>Invitado actual</h3>
+        <p><strong>Nombre:</strong> <span id="manualInvitado">Pendiente de cargar</span></p>
+        <p><strong>Celular:</strong> <span id="manualCelular">-</span></p>
+        <p><strong>Pases:</strong> <span id="manualPases">-</span></p>
+        <p><strong>Estado:</strong> <span id="manualEstado" class="status-pill status-pending">Pendiente</span></p>
+        <button class="btn" onclick="abrirWhatsappManual()">Abrir WhatsApp</button>
+        <button class="btn secondary" onclick="marcarManualEnviado()">Marcar como enviado</button>
+      </div>
+      <div class="send-card">
+        <h3>Mensaje</h3>
+        <div id="manualMensaje" class="msg-preview">Pendiente de conexión con Apps Script.</div>
+      </div>
+    </div>
+    <div class="section">
+      <h2>Control de envíos</h2>
+      <div id="tablaEnviosManual" class="table-wrap loading">Pendiente de conexión con Apps Script.</div>
+    </div>
+  </section>
+
+  <section id="envioApi" class="screen">
+    <button class="btn secondary back" onclick="volverDetalle()">← Volver al Dashboard de boda</button>
+    <div class="header"><h1>Envío de mensajes Whsp API</h1><p id="tituloEnvioApi"></p></div>
+    <div class="section">
+      <div class="alert">Canal API preparado en arquitectura. Pendiente de activación con WhatsApp Cloud API y plantillas aprobadas por Meta.</div>
+      <button class="btn disabled" disabled>Enviar campaña API</button>
+    </div>
+  </section>
+
+  <section id="reporteInvitados" class="screen">
+    <button class="btn secondary back" onclick="volverDetalle()">← Volver al Dashboard de boda</button>
+    <div class="header"><h1>Reporte de invitados</h1><p id="tituloReporteInvitados"></p></div>
+    <div class="section">
+      <div class="action-grid">
+        <button class="btn" onclick="descargarReporteExcel()">Descargar Excel</button>
+        <button class="btn secondary" onclick="descargarReportePDF()">Descargar PDF</button>
+      </div>
+      <div id="tablaReporteInvitados" class="table-wrap loading">Pendiente de conexión con Apps Script.</div>
+    </div>
+  </section>
+
+  <section id="mesas" class="screen">
+    <button class="btn secondary back" onclick="volverDetalle()">← Volver al Dashboard de boda</button>
+    <div class="header"><h1>Distribución de mesas</h1><p id="tituloMesas"></p></div>
+    <div class="section"><div class="alert">Módulo pendiente de implementación.</div></div>
   </section>
 </div>
 
 <script>
-const WEBAPP_URL="https://script.google.com/macros/s/AKfycbz5ssZquHV8W_5A2WAQYsv-oTXa6NAea5jUQBZyZ0x-MgzbANC_lYtyq7D99M8988XczQ/exec";
-let dashboardData=null;let bodas=[];
-async function cargarDashboard(){try{const response=await fetch(WEBAPP_URL);dashboardData=await response.json();if(dashboardData.error){mostrarError(dashboardData.mensaje);return}bodas=dashboardData.bodasActivas||[];cargarHome()}catch(error){console.error(error);mostrarError("No se pudo cargar la información del Dashboard desde Apps Script. Revisa la URL /exec y permisos de la Web App.")}}
-function mostrarError(mensaje){const box=document.getElementById("errorBox");box.style.display="block";box.innerText=mensaje}
-function cargarHome(){document.getElementById("totalBodas").innerText=dashboardData.totalBodas||0;document.getElementById("totalAlertas").innerText=(dashboardData.alertas||[]).length;const cont=document.getElementById("listaBodas");const alertas=document.getElementById("alertasHome");cont.innerHTML="";alertas.innerHTML="";bodas.forEach(b=>{cont.innerHTML+=`<div class="boda-card"><h3>${b.codigo} – ${b.nombre}</h3><p><strong>Fecha boda:</strong> ${b.fechaBoda}</p><p><strong>Ciudad:</strong> ${b.ciudad}</p><p><strong>Estado:</strong> ${b.estado}</p><p><strong>Avance:</strong> ${b.avance}%</p><button class="btn" onclick="abrirBoda('${b.codigo}')">Abrir Dashboard</button></div>`});(dashboardData.alertas||[]).forEach(a=>{alertas.innerHTML+=`<div class="alert">${a}</div>`})}
-function abrirBoda(codigo){const b=bodas.find(x=>x.codigo===codigo);if(!b){mostrarError("No se encontró la boda seleccionada.");return}document.getElementById("home").classList.remove("active");document.getElementById("detalle").classList.add("active");document.getElementById("nombreBoda").innerText=b.nombre;document.getElementById("infoBoda").innerHTML=`<li>Fecha boda: ${b.fechaBoda}</li><li>Ciudad: ${b.ciudad}</li><li>Fecha envío mensajes: ${b.inicioConfirmacion}</li><li>Fecha máxima confirmaciones: ${b.cierreConfirmacion}</li><li>Días para cierre: ${b.diasCierre}</li>`;document.getElementById("avancePrincipal").innerText=b.avance+"%";document.getElementById("avanceBar").style.width=Math.min(Number(b.avance)||0,100)+"%";document.getElementById("totalPases").innerText=b.totalPases;document.getElementById("siAsisten").innerText=b.siAsisten;document.getElementById("noAsisten").innerText=b.noAsisten;document.getElementById("pendientes").innerText=b.pendientes;document.getElementById("liberados").innerText=b.pasesLiberados;dibujarBarras(b);dibujarLinea(b.evolucion||[]);pintarAlertasBoda(b.codigo);window.scrollTo({top:0,behavior:"smooth"})}
-function dibujarBarras(b){const total=Math.max(Number(b.totalPases)||1,1);const estados=[["Sí asistirán",Number(b.siAsisten)||0],["No asistirán",Number(b.noAsisten)||0],["Pendientes",Number(b.pendientes)||0],["Liberados",Number(b.pasesLiberados)||0]];document.getElementById("barras").innerHTML=estados.map(e=>{const pct=Math.max(10,Math.round((e[1]/total)*240));return`<div class="bar-wrap"><div class="vbar" style="height:${pct}px"></div><div class="bar-label">${e[0]}<br><strong>${e[1]}</strong></div></div>`}).join("")}
-function dibujarLinea(evolucion){const svg=document.getElementById("lineChart");const yAxis=document.getElementById("yAxis");const xAxis=document.getElementById("xAxis");svg.innerHTML="";yAxis.innerHTML="";xAxis.innerHTML="";if(!evolucion||evolucion.length===0){svg.innerHTML=`<text x="40" y="145" fill="#6f6f6b" font-size="16">Sin confirmaciones registradas</text>`;yAxis.innerHTML=`<span>0</span><span>0</span><span>0</span><span>0</span><span>0</span>`;return}const data=evolucion.map(e=>Number(e.pases)||0);const fechas=evolucion.map(e=>e.fecha);const max=Math.max(...data,1);const escala=[max,Math.round(max*.75),Math.round(max*.5),Math.round(max*.25),0];yAxis.innerHTML=escala.map(v=>`<span>${v}</span>`).join("");xAxis.innerHTML=fechas.map(f=>`<span>${f}</span>`).join("");const puntosArray=data.map((v,i)=>{const x=data.length===1?410:(i/(data.length-1))*760+30;const y=260-(v/max)*220;return{x,y,v}});const puntos=puntosArray.map(p=>`${p.x},${p.y}`).join(" ");svg.innerHTML=`<polyline points="${puntos}" fill="none" stroke="#111111" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${puntosArray.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="5" fill="#111111"></circle>`).join("")}`}
-function pintarAlertasBoda(codigo){const cont=document.getElementById("alertasBoda");const propias=(dashboardData.alertas||[]).filter(a=>a.startsWith(codigo));cont.innerHTML=propias.length?propias.map(a=>`<div class="alert">${a}</div>`).join(""):`<div class="alert">No hay alertas críticas para esta boda.</div>`}
-function volverHome(){document.getElementById("detalle").classList.remove("active");document.getElementById("home").classList.add("active");window.scrollTo({top:0,behavior:"smooth"})}
+const WEBAPP_URL="https://script.google.com/macros/s/AKfycbywOx2N_2L_3BM78Dnk3yWGbGHBmBayFnSnN5y-lQbtof9PWHtG7I-61v6POJNFHQ8ccA/exec";
+let dashboardData=null;
+let bodas=[];
+let bodaActual=null;
+
+async function cargarDashboard(){
+  try{
+    const response=await fetch(WEBAPP_URL+"?accion=dashboard");
+    dashboardData=await response.json();
+    if(dashboardData.error){mostrarError(dashboardData.mensaje);return}
+    bodas=dashboardData.bodasActivas||[];
+    cargarHome();
+  }catch(error){
+    console.error(error);
+    mostrarError("No se pudo cargar la información del Dashboard desde Apps Script. Revisa la URL /exec y permisos de la Web App.");
+  }
+}
+
+function mostrarError(mensaje){
+  const box=document.getElementById("errorBox");
+  box.style.display="block";
+  box.innerText=mensaje;
+}
+
+function cambiarPantalla(id){
+  document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function cargarHome(){
+  document.getElementById("totalBodas").innerText=dashboardData.totalBodas||0;
+  document.getElementById("totalAlertas").innerText=(dashboardData.alertas||[]).length;
+  const cont=document.getElementById("listaBodas");
+  const alertas=document.getElementById("alertasHome");
+  cont.innerHTML="";
+  alertas.innerHTML="";
+  bodas.forEach(b=>{
+    cont.innerHTML+=`<div class="boda-card"><h3>${b.codigo} – ${b.nombre}</h3><p><strong>Fecha boda:</strong> ${b.fechaBoda}</p><p><strong>Ciudad:</strong> ${b.ciudad}</p><p><strong>Estado:</strong> ${b.estado}</p><p><strong>Avance:</strong> ${b.avance}%</p><button class="btn" onclick="abrirBoda('${b.codigo}')">Abrir Dashboard</button></div>`;
+  });
+  (dashboardData.alertas||[]).forEach(a=>{alertas.innerHTML+=`<div class="alert">${a}</div>`});
+}
+
+function abrirBoda(codigo){
+  const b=bodas.find(x=>x.codigo===codigo);
+  if(!b){mostrarError("No se encontró la boda seleccionada.");return}
+  bodaActual=b;
+  cambiarPantalla("detalle");
+  document.getElementById("nombreBoda").innerText=b.nombre;
+  document.getElementById("infoBoda").innerHTML=`<li>Fecha boda: ${b.fechaBoda}</li><li>Ciudad: ${b.ciudad}</li><li>Fecha envío mensajes: ${b.inicioConfirmacion}</li><li>Fecha máxima confirmaciones: ${b.cierreConfirmacion}</li><li>Días para cierre: ${b.diasCierre}</li>`;
+  const avanceSeguro=Math.min(Math.max(Number(b.avance)||0,0),100);
+  document.getElementById("avancePrincipal").innerText=avanceSeguro+"%";
+  document.getElementById("avanceBar").style.width=avanceSeguro+"%";
+  const totalCuadre=(Number(b.siAsisten)||0)+(Number(b.noAsisten)||0)+(Number(b.pendientes)||0)+(Number(b.pasesLiberados)||0);
+  document.getElementById("totalPases").innerText=totalCuadre;
+  document.getElementById("siAsisten").innerText=b.siAsisten;
+  document.getElementById("noAsisten").innerText=b.noAsisten;
+  document.getElementById("pendientes").innerText=b.pendientes;
+  document.getElementById("liberados").innerText=b.pasesLiberados;
+  dibujarBarras(b);
+  dibujarLinea(b.evolucion||[]);
+  pintarAlertasBoda(b.codigo);
+}
+
+function abrirModulo(tipo){
+  if(!bodaActual){mostrarError("Primero selecciona una boda.");return}
+  const titulo=`${bodaActual.codigo} - ${bodaActual.nombre}`;
+
+  if(tipo==="lista"){
+    document.getElementById("tituloListaInvitados").innerText=titulo;
+    cargarListaInvitados();
+    cambiarPantalla("listaInvitados");
+  }else if(tipo==="whatsappManual"){
+    document.getElementById("tituloEnvioManual").innerText=titulo;
+    cargarEnviosManual();
+    cambiarPantalla("envioManual");
+  }else if(tipo==="whatsappApi"){
+    document.getElementById("tituloEnvioApi").innerText=titulo;
+    cambiarPantalla("envioApi");
+  }else if(tipo==="reporte"){
+    document.getElementById("tituloReporteInvitados").innerText=titulo;
+    cargarReporteInvitados();
+    cambiarPantalla("reporteInvitados");
+  }else if(tipo==="mesas"){
+    document.getElementById("tituloMesas").innerText=titulo;
+    cambiarPantalla("mesas");
+  }
+}
+
+async function cargarListaInvitados(){
+  document.getElementById("tablaListaInvitados").innerHTML="Pendiente: requiere endpoint Apps Script accion=listarInvitadosBoda.";
+}
+
+async function cargarEnviosManual(){
+  document.getElementById("manualInvitado").innerText="Pendiente de conexión";
+  document.getElementById("manualCelular").innerText="-";
+  document.getElementById("manualPases").innerText="-";
+  document.getElementById("manualMensaje").innerText="Pendiente: requiere endpoint Apps Script accion=listarEnviosManual.";
+  document.getElementById("tablaEnviosManual").innerHTML="Pendiente: requiere endpoint Apps Script accion=listarEnviosManual.";
+}
+
+async function cargarReporteInvitados(){
+  document.getElementById("tablaReporteInvitados").innerHTML="Pendiente: requiere endpoint Apps Script accion=reporteInvitados.";
+}
+
+function abrirWhatsappManual(){
+  alert("Pendiente de conexión con Apps Script: abrir WhatsApp del invitado pendiente.");
+}
+
+function marcarManualEnviado(){
+  alert("Pendiente de conexión con Apps Script: marcar invitado como enviado.");
+}
+
+function descargarListaInvitadosExcel(){alert("Pendiente de endpoint Apps Script para descarga Excel.");}
+function descargarReporteExcel(){alert("Pendiente de endpoint Apps Script para descarga Excel.");}
+function descargarReportePDF(){alert("Pendiente de endpoint Apps Script para descarga PDF.");}
+
+function dibujarBarras(b){
+  const totalCuadre=(Number(b.siAsisten)||0)+(Number(b.noAsisten)||0)+(Number(b.pendientes)||0)+(Number(b.pasesLiberados)||0);
+  const total=Math.max(totalCuadre||Number(b.totalPases)||1,1);
+  const estados=[["Sí asisten",Number(b.siAsisten)||0],["No asisten",Number(b.noAsisten)||0],["Pendientes",Number(b.pendientes)||0],["Liberados",Number(b.pasesLiberados)||0]];
+  document.getElementById("barras").innerHTML=estados.map(e=>{
+    const pct=Math.min(240,Math.max(10,Math.round((e[1]/total)*240)));
+    return`<div class="bar-wrap"><div class="vbar" style="height:${pct}px"></div><div class="bar-label">${e[0]}<br><strong>${e[1]}</strong></div></div>`;
+  }).join("");
+}
+
+function dibujarLinea(evolucion){
+  const svg=document.getElementById("lineChart");
+  const yAxis=document.getElementById("yAxis");
+  const xAxis=document.getElementById("xAxis");
+  svg.innerHTML="";yAxis.innerHTML="";xAxis.innerHTML="";
+  if(!evolucion||evolucion.length===0){
+    svg.innerHTML=`<text x="40" y="145" fill="#6f6f6b" font-size="16">Sin confirmaciones registradas</text>`;
+    yAxis.innerHTML=`<span>0</span><span>0</span><span>0</span><span>0</span><span>0</span>`;
+    return;
+  }
+  const data=evolucion.map(e=>Number(e.pases)||0);
+  const fechas=evolucion.map(e=>e.fecha);
+  const max=Math.max(...data,1);
+  const escala=[max,Math.round(max*.75),Math.round(max*.5),Math.round(max*.25),0];
+  yAxis.innerHTML=escala.map(v=>`<span>${v}</span>`).join("");
+  xAxis.innerHTML=fechas.map(f=>`<span>${f}</span>`).join("");
+  const puntosArray=data.map((v,i)=>{const x=data.length===1?410:(i/(data.length-1))*760+30;const y=260-(v/max)*220;return{x,y,v}});
+  const puntos=puntosArray.map(p=>`${p.x},${p.y}`).join(" ");
+  svg.innerHTML=`<polyline points="${puntos}" fill="none" stroke="#111111" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${puntosArray.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="5" fill="#111111"></circle>`).join("")}`;
+}
+
+function pintarAlertasBoda(codigo){
+  const cont=document.getElementById("alertasBoda");
+  const propias=(dashboardData.alertas||[]).filter(a=>a.startsWith(codigo));
+  cont.innerHTML=propias.length?propias.map(a=>`<div class="alert">${a}</div>`).join(""):`<div class="alert">No hay alertas críticas para esta boda.</div>`;
+}
+
+function volverHome(){cambiarPantalla("home")}
+function volverDetalle(){cambiarPantalla("detalle")}
+
 cargarDashboard();
 </script>
 </body>
