@@ -836,12 +836,13 @@ function obtenerBodasSGI_(hoja) {
     if (!codigo) continue;
 
     bodas[codigo] = {
-      codigo: codigo,
-      novios: row[idx.novios],
-      fechaBoda: row[idx.fecha_boda],
-      ciudad: row[idx.ciudad],
-      cierreConfirmacion: row[idx.cierre_confirmacion],
-      htmlUrl: idx.html_url !== undefined ? row[idx.html_url] : ""
+     codigo: codigo,
+     novios: row[idx.novios],
+     fechaBoda: row[idx.fecha_boda],
+     ciudad: row[idx.ciudad],
+     cierreConfirmacion: row[idx.cierre_confirmacion],
+     fotoUrl: idx.foto_url !== undefined ? row[idx.foto_url] : "",
+     htmlUrl: idx.html_url !== undefined ? row[idx.html_url] : ""
     };
   }
 
