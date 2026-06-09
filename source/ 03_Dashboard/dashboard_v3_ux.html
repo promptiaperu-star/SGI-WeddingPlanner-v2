@@ -498,27 +498,6 @@ function descargarReportePDF(){
   ventana.print();
 }
 
-function descargarExcelSGI_(nombreArchivo, headers, filas){
-  let html = `
-    <table>
-      <thead>
-        <tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>
-      </thead>
-      <tbody>
-        ${filas.map(f => `<tr>${f.map(c => `<td>${String(c).replace(/</g,"&lt;").replace(/>/g,"&gt;")}</td>`).join("")}</tr>`).join("")}
-      </tbody>
-    </table>
-  `;
-
-  const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8;" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = nombreArchivo;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
 function dibujarBarras(b){
   const totalCuadre=(Number(b.siAsisten)||0)+(Number(b.noAsisten)||0)+(Number(b.pendientes)||0)+(Number(b.pasesLiberados)||0);
   const total=Math.max(totalCuadre||Number(b.totalPases)||1,1);
