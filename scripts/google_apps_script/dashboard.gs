@@ -31,6 +31,10 @@ function doGet(e) {
       data = listarEnviosManual(e.parameter.boda);
     } else if (accion === "reporteInvitados") {
       data = reporteInvitados(e.parameter.boda);
+    } else if (accion === "descargarListaInvitadosXlsx") {
+      data = descargarListaInvitadosXlsx(e.parameter.boda);
+    } else if (accion === "descargarReporteInvitadosXlsx") {
+      data = descargarReporteInvitadosXlsx(e.parameter.boda);
     } else if (accion === "marcarEnviadoManual") {
       data = marcarEnviadoManual(e.parameter.boda, e.parameter.id);
     } else if (e && e.parameter && e.parameter.boda && e.parameter.id) {
@@ -609,6 +613,79 @@ function reporteInvitados(codigoBoda) {
     codigoBoda: codigoBoda,
     total: reporte.length,
     reporte: reporte
+  };
+}
+
+function descargarListaInvitadosXlsx(codigoBoda) {
+  const data = listarInvitadosBoda(codigoBoda);
+  if (data.error) return data;
+
+  return generarXlsxBase64_(
+    `Lista_Invitados_${codigoBoda}.xlsx`,
+    "Lista Invitados",
+    ["Invitado principal", "Celular", "Pases", "Categoría", "Quién invita", "Observaciones"],
+    data.invitados.map(i => [
+      i.invitadoPrincipal || "",
+      i.celular || "",
+      i.pases || 0,
+      i.categoria || "",
+      i.quienInvita || "",
+      i.observaciones || ""
+    ])
+  );
+}
+
+function descargarReporteInvitadosXlsx(codigoBoda) {
+  const data = reporteInvitados(codigoBoda);
+  if (data.error) return data;
+
+  return generarXlsxBase64_(
+    `Reporte_Invitados_${codigoBoda}.xlsx`,
+    "Reporte Invitados",
+    ["Invitado principal", "Pases asignados", "Estado", "Pases confirmados", "Liberados", "Acompañantes", "Fecha confirmación"],
+    data.reporte.map(i => [
+      i.invitadoPrincipal || "",
+      i.pasesAsignados || 0,
+      i.estado || "",
+      i.pasesConfirmados || 0,
+      i.pasesLiberados || 0,
+      i.acompanantes || "",
+      i.fechaConfirmacion || ""
+    ])
+  );
+}
+
+function generarXlsxBase64_(nombreArchivo, nombreHoja, encabezados, filas) {
+  const archivoTemp = SpreadsheetApp.create(nombreArchivo.replace(".xlsx", ""));
+  const ssTemp = SpreadsheetApp.openById(archivoTemp.getId());
+  const hoja = ssTemp.getSheets()[0];
+
+  hoja.setName(nombreHoja);
+  hoja.getRange(1, 1, 1, encabezados.length).setValues([encabezados]);
+
+  if (filas.length > 0) {
+    hoja.getRange(2, 1, filas.length, encabezados.length).setValues(filas);
+  }
+
+  hoja.getRange(1, 1, 1, encabezados.length).setFontWeight("bold");
+  hoja.autoResizeColumns(1, encabezados.length);
+
+  SpreadsheetApp.flush();
+
+  const url = `https://docs.google.com/spreadsheets/d/${archivoTemp.getId()}/export?format=xlsx`;
+  const token = ScriptApp.getOAuthToken();
+
+  const blob = UrlFetchApp.fetch(url, {
+    headers: { Authorization: `Bearer ${token}` }
+  }).getBlob();
+
+  DriveApp.getFileById(archivoTemp.getId()).setTrashed(true);
+
+  return {
+    error: false,
+    nombreArchivo: nombreArchivo,
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    base64: Utilities.base64Encode(blob.getBytes())
   };
 }
 
