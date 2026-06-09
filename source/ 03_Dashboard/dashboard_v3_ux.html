@@ -434,9 +434,99 @@ async function marcarManualEnviado(){
   }
 }
 
-function descargarListaInvitadosExcel(){alert("Pendiente de endpoint Apps Script para descarga Excel.");}
-function descargarReporteExcel(){alert("Pendiente de endpoint Apps Script para descarga Excel.");}
-function descargarReportePDF(){alert("Pendiente de endpoint Apps Script para descarga PDF.");}
+async function descargarListaInvitadosExcel(){
+  const res = await fetch(`${WEBAPP_URL}?accion=listarInvitadosBoda&boda=${encodeURIComponent(bodaActual.codigo)}`);
+  const data = await res.json();
+
+  if(data.error){ alert(data.mensaje); return; }
+
+  const filas = data.invitados.map(i => [
+    i.invitadoPrincipal || "",
+    i.celular || "",
+    i.pases || 0,
+    i.categoria || "",
+    i.quienInvita || "",
+    i.observaciones || ""
+  ]);
+
+  descargarExcelSGI_(
+    `Lista_Invitados_${bodaActual.codigo}.xls`,
+    ["Invitado principal","Celular","Pases","Categoría","Quién invita","Observaciones"],
+    filas
+  );
+}
+
+async function descargarReporteExcel(){
+  const res = await fetch(`${WEBAPP_URL}?accion=reporteInvitados&boda=${encodeURIComponent(bodaActual.codigo)}`);
+  const data = await res.json();
+
+  if(data.error){ alert(data.mensaje); return; }
+
+  const filas = data.reporte.map(i => [
+    i.invitadoPrincipal || "",
+    i.pasesAsignados || 0,
+    i.estado || "",
+    i.pasesConfirmados || 0,
+    i.pasesLiberados || 0,
+    i.acompanantes || "",
+    i.fechaConfirmacion || ""
+  ]);
+
+  descargarExcelSGI_(
+    `Reporte_Invitados_${bodaActual.codigo}.xls`,
+    ["Invitado principal","Pases asignados","Estado","Pases confirmados","Liberados","Acompañantes","Fecha confirmación"],
+    filas
+  );
+}
+
+function descargarReportePDF(){
+  const contenido = document.getElementById("tablaReporteInvitados").innerHTML;
+  const ventana = window.open("", "_blank");
+
+  ventana.document.write(`
+    <html>
+      <head>
+        <title>Reporte de invitados - ${bodaActual.codigo}</title>
+        <style>
+          body{font-family:Arial;padding:30px;color:#111}
+          h1{margin-bottom:5px}
+          table{width:100%;border-collapse:collapse;margin-top:20px}
+          th{background:#111;color:white}
+          th,td{border:1px solid #ccc;padding:8px;text-align:left;font-size:12px}
+        </style>
+      </head>
+      <body>
+        <h1>Reporte de invitados</h1>
+        <p>${bodaActual.codigo} - ${bodaActual.nombre}</p>
+        ${contenido}
+      </body>
+    </html>
+  `);
+
+  ventana.document.close();
+  ventana.print();
+}
+
+function descargarExcelSGI_(nombreArchivo, headers, filas){
+  let html = `
+    <table>
+      <thead>
+        <tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>
+      </thead>
+      <tbody>
+        ${filas.map(f => `<tr>${f.map(c => `<td>${String(c).replace(/</g,"&lt;").replace(/>/g,"&gt;")}</td>`).join("")}</tr>`).join("")}
+      </tbody>
+    </table>
+  `;
+
+  const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = nombreArchivo;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
 
 function dibujarBarras(b){
   const totalCuadre=(Number(b.siAsisten)||0)+(Number(b.noAsisten)||0)+(Number(b.pendientes)||0)+(Number(b.pasesLiberados)||0);
