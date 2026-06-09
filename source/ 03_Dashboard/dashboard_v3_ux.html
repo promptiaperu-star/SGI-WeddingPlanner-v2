@@ -435,48 +435,39 @@ async function marcarManualEnviado(){
 }
 
 async function descargarListaInvitadosExcel(){
-  const res = await fetch(`${WEBAPP_URL}?accion=listarInvitadosBoda&boda=${encodeURIComponent(bodaActual.codigo)}`);
+  const res = await fetch(`${WEBAPP_URL}?accion=descargarListaInvitadosXlsx&boda=${encodeURIComponent(bodaActual.codigo)}`);
   const data = await res.json();
 
   if(data.error){ alert(data.mensaje); return; }
 
-  const filas = data.invitados.map(i => [
-    i.invitadoPrincipal || "",
-    i.celular || "",
-    i.pases || 0,
-    i.categoria || "",
-    i.quienInvita || "",
-    i.observaciones || ""
-  ]);
-
-  descargarExcelSGI_(
-    `Lista_Invitados_${bodaActual.codigo}.xls`,
-    ["Invitado principal","Celular","Pases","Categoría","Quién invita","Observaciones"],
-    filas
-  );
+  descargarArchivoBase64_(data.nombreArchivo, data.mimeType, data.base64);
 }
 
 async function descargarReporteExcel(){
-  const res = await fetch(`${WEBAPP_URL}?accion=reporteInvitados&boda=${encodeURIComponent(bodaActual.codigo)}`);
+  const res = await fetch(`${WEBAPP_URL}?accion=descargarReporteInvitadosXlsx&boda=${encodeURIComponent(bodaActual.codigo)}`);
   const data = await res.json();
 
   if(data.error){ alert(data.mensaje); return; }
 
-  const filas = data.reporte.map(i => [
-    i.invitadoPrincipal || "",
-    i.pasesAsignados || 0,
-    i.estado || "",
-    i.pasesConfirmados || 0,
-    i.pasesLiberados || 0,
-    i.acompanantes || "",
-    i.fechaConfirmacion || ""
-  ]);
+  descargarArchivoBase64_(data.nombreArchivo, data.mimeType, data.base64);
+}
 
-  descargarExcelSGI_(
-    `Reporte_Invitados_${bodaActual.codigo}.xls`,
-    ["Invitado principal","Pases asignados","Estado","Pases confirmados","Liberados","Acompañantes","Fecha confirmación"],
-    filas
-  );
+function descargarArchivoBase64_(nombreArchivo, mimeType, base64){
+  const bytes = atob(base64);
+  const array = new Uint8Array(bytes.length);
+
+  for(let i = 0; i < bytes.length; i++){
+    array[i] = bytes.charCodeAt(i);
+  }
+
+  const blob = new Blob([array], { type: mimeType });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = nombreArchivo;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
 }
 
 function descargarReportePDF(){
