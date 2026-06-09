@@ -53,7 +53,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica
     <button class="btn secondary back" onclick="volverHome()">← Volver al panel Multi-Boda</button>
     <div class="section bento">
       <div><h1 class="detail-title" id="nombreBoda">Boda</h1><ul class="info-list" id="infoBoda"></ul></div>
-      <div class="photo-box">Foto de los novios<br>Pendiente de carga</div>
+      <div class="photo-box" id="fotoBoda">Foto de los novios<br>Pendiente de carga</div>
     </div>
 
     <div class="black-panel">
@@ -200,6 +200,13 @@ function abrirBoda(codigo){
   cambiarPantalla("detalle");
   document.getElementById("nombreBoda").innerText=b.nombre;
   document.getElementById("infoBoda").innerHTML=`<li>Fecha boda: ${b.fechaBoda}</li><li>Ciudad: ${b.ciudad}</li><li>Fecha envío mensajes: ${b.inicioConfirmacion}</li><li>Fecha máxima confirmaciones: ${b.cierreConfirmacion}</li><li>Días para cierre: ${b.diasCierre}</li>`;
+  const fotoBoda = document.getElementById("fotoBoda");
+
+  if (b.fotoUrl) {
+  fotoBoda.innerHTML = `<img src="${b.fotoUrl}" alt="Foto de los novios" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">`;
+  } else {
+  fotoBoda.innerHTML = "Foto de los novios<br>Pendiente de carga";
+  }
   const avanceSeguro=Math.min(Math.max(Number(b.avance)||0,0),100);
   document.getElementById("avancePrincipal").innerText=avanceSeguro+"%";
   document.getElementById("avanceBar").style.width=avanceSeguro+"%";
