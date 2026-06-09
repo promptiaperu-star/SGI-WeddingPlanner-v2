@@ -1,6 +1,81 @@
 /****************************************************
- * SGI v3.1 - Backend Multi-Boda
+ * SGI v3.2 - Backend Multi-Boda Operativo
  ****************************************************/
+
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu("SGI")
+    .addItem("Generar enlaces y mensajes", "generarLinksYMensajes")
+    .addSeparator()
+    .addItem("Actualizar Centro de Envíos", "actualizarCentroEnvios")
+    .addItem("Abrir WhatsApp del invitado actual", "abrirWhatsappInvitadoActual")
+    .addItem("Marcar invitado actual como enviado", "marcarInvitadoActualEnviado")
+    .addToUi();
+}
+
+function doGet(e) {
+  const accion = e && e.parameter && e.parameter.accion
+    ? String(e.parameter.accion).trim()
+    : "dashboard";
+
+  let data;
+
+  try {
+    if (accion === "dashboard") {
+      data = obtenerDashboard();
+    } else if (accion === "buscarInvitado") {
+      data = buscarInvitadoConfirmacion(e.parameter.boda, e.parameter.id);
+    } else if (accion === "listarInvitadosBoda") {
+      data = listarInvitadosBoda(e.parameter.boda);
+    } else if (accion === "listarEnviosManual") {
+      data = listarEnviosManual(e.parameter.boda);
+    } else if (accion === "reporteInvitados") {
+      data = reporteInvitados(e.parameter.boda);
+    } else if (accion === "marcarEnviadoManual") {
+      data = marcarEnviadoManual(e.parameter.boda, e.parameter.id);
+    } else if (e && e.parameter && e.parameter.boda && e.parameter.id) {
+      data = buscarInvitadoConfirmacion(e.parameter.boda, e.parameter.id);
+    } else {
+      data = { error: true, mensaje: "Acción no reconocida." };
+    }
+  } catch (error) {
+    data = { error: true, mensaje: error.toString() };
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  let payload = {};
+
+  try {
+    payload = JSON.parse(e.postData.contents);
+  } catch (error) {
+    return jsonOutput_({ error: true, mensaje: "Payload inválido." });
+  }
+
+  let data;
+
+  try {
+    if (payload.accion === "marcarEnviadoManual") {
+      data = marcarEnviadoManual(payload.codigoBoda, payload.idInvitado);
+    } else {
+      data = registrarConfirmacionInvitado(payload);
+    }
+  } catch (error) {
+    data = { error: true, mensaje: error.toString() };
+  }
+
+  return jsonOutput_(data);
+}
+
+function jsonOutput_(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
 
 function obtenerDashboard() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -25,6 +100,7 @@ function obtenerDashboard() {
   );
 
   return {
+    error: false,
     fechaActualizacion: formatearFechaCompleta_(new Date()),
     totalBodas: bodasActivas.length,
     bodasActivas: bodasActivas,
@@ -32,10 +108,6 @@ function obtenerDashboard() {
     resumen: construirResumenGeneral_(bodasActivas)
   };
 }
-
-/****************************************************
- * LECTURA DE HOJAS
- ****************************************************/
 
 function leerBodas_(hoja) {
   const data = hoja.getDataRange().getValues();
@@ -71,7 +143,15 @@ function leerInvitados_(hoja) {
       celular: row[4],
       categoria: row[5],
       quienInvita: row[6],
-      observaciones: row[7]
+      observaciones: row[7],
+      linkConfirmacion: row[8],
+      mensajeWhatsapp: row[9],
+      enviadoWhatsapp: row[10],
+      fechaEnvio: row[11],
+      urlWhatsapp: row[12],
+      canalEnvio: row[13],
+      idApiWhatsapp: row[14],
+      estadoApi: row[15]
     }))
     .filter(invitado =>
       invitado.codigoBoda &&
@@ -99,10 +179,6 @@ function leerConfirmaciones_(hoja) {
     .filter(r => r.codigoBoda && r.invitado);
 }
 
-/****************************************************
- * DASHBOARD
- ****************************************************/
-
 function construirResumenBoda_(boda, invitados, confirmaciones) {
   const invitadosBoda = invitados.filter(i => i.codigoBoda === boda.codigo);
   const respuestas = confirmaciones.filter(r => r.codigoBoda === boda.codigo);
@@ -120,13 +196,10 @@ function construirResumenBoda_(boda, invitados, confirmaciones) {
   const pasesLiberados = respuestas
     .reduce((sum, r) => sum + r.pasesLiberados, 0);
 
-  const pendientes = Math.max(
-    totalPases - siAsisten - pasesLiberados,
-    0
-  );
+  const pendientes = Math.max(totalPases - siAsisten - pasesLiberados, 0);
 
   const avance = totalPases > 0
-    ? Math.round((siAsisten / totalPases) * 100)
+    ? Math.min(Math.round((siAsisten / totalPases) * 100), 100)
     : 0;
 
   return {
@@ -210,10 +283,6 @@ function construirEvolucion_(respuestas) {
     pases: agrupado[fecha]
   }));
 }
-
-/****************************************************
- * CONFIRMACIÓN DE INVITADOS
- ****************************************************/
 
 function buscarInvitadoConfirmacion(codigoBoda, idInvitado) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -302,68 +371,428 @@ function registrarConfirmacionInvitado(data) {
   };
 }
 
-/****************************************************
- * WEB APP
- ****************************************************/
+function generarLinksYMensajes() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
 
-function doGet(e) {
-  const accion = e && e.parameter && e.parameter.accion
-    ? e.parameter.accion
-    : "dashboard";
+  const hojaInvitados = ss.getSheetByName("Invitados");
+  const hojaBodas = ss.getSheetByName("Bodas");
+  const hojaPlantillas = ss.getSheetByName("Plantillas");
+  const hojaConfiguracion = ss.getSheetByName("Configuración");
 
-  let data;
+  if (!hojaInvitados || !hojaBodas || !hojaPlantillas || !hojaConfiguracion) {
+    throw new Error("Faltan hojas requeridas: Invitados, Bodas, Plantillas o Configuración.");
+  }
 
-  if (accion === "dashboard") {
-    data = obtenerDashboard();
+  const config = obtenerConfiguracionSGI_(hojaConfiguracion);
+  const urlConfirmacionBase = config.UrlConfirmacion;
+  const paisWhatsapp = String(config.PaisWhatsapp || "51").replace(/\D/g, "");
+  const modoEnvio = String(config.ModoEnvio || "MANUAL").toUpperCase();
 
-  } else if (accion === "buscarInvitado") {
-    data = buscarInvitadoConfirmacion(
-      e.parameter.boda,
-      e.parameter.id
-    );
+  if (!urlConfirmacionBase) {
+    throw new Error("Falta UrlConfirmacion en la hoja Configuración.");
+  }
 
-  } else if (e && e.parameter && e.parameter.boda && e.parameter.id) {
-    data = buscarInvitadoConfirmacion(
-      e.parameter.boda,
-      e.parameter.id
-    );
+  const bodas = obtenerBodasSGI_(hojaBodas);
+  const plantillas = obtenerPlantillasSGI_(hojaPlantillas);
 
-  } else {
-    data = {
-      error: true,
-      mensaje: "Acción no reconocida."
+  const data = hojaInvitados.getDataRange().getValues();
+  const headers = data[0];
+  const idx = obtenerIndicesSGI_(headers);
+
+  let actualizados = 0;
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+
+    const codigoBoda = String(row[idx.codigo_boda] || "").trim();
+    const idInvitado = String(row[idx.id_invitado] || "").trim();
+    const invitado = String(row[idx.invitado_principal] || "").trim();
+
+    if (!codigoBoda || !idInvitado || !invitado) continue;
+
+    const boda = bodas[codigoBoda];
+    const plantilla = plantillas[codigoBoda];
+
+    if (!boda) {
+      hojaInvitados.getRange(i + 1, idx.estado_api + 1).setValue("ERROR: boda no encontrada");
+      continue;
+    }
+
+    if (!plantilla) {
+      hojaInvitados.getRange(i + 1, idx.estado_api + 1).setValue("ERROR: plantilla activa no encontrada");
+      continue;
+    }
+
+    const linkConfirmacion = `${urlConfirmacionBase}?boda=${encodeURIComponent(codigoBoda)}&id=${encodeURIComponent(idInvitado)}`;
+
+    const mensaje = construirMensajeDesdePlantillaSGI_(plantilla.mensaje, {
+      INVITADO: invitado,
+      NOVIOS: boda.novios,
+      PASES: row[idx.pases],
+      CIUDAD: boda.ciudad,
+      FECHA_BODA: formatearFechaSGI_(boda.fechaBoda),
+      FECHA_CIERRE: formatearFechaSGI_(boda.cierreConfirmacion),
+      LINK_CONFIRMACION: linkConfirmacion
+    });
+
+    const celular = construirCelularWhatsappSGI_(row[idx.celular], paisWhatsapp);
+    const urlWhatsapp = celular
+      ? `https://wa.me/${celular}?text=${encodeURIComponent(mensaje)}`
+      : "";
+
+    hojaInvitados.getRange(i + 1, idx.link_confirmacion + 1).setValue(linkConfirmacion);
+    hojaInvitados.getRange(i + 1, idx.mensaje_whatsapp + 1).setValue(mensaje);
+    hojaInvitados.getRange(i + 1, idx.url_whatsapp + 1).setValue(urlWhatsapp);
+    hojaInvitados.getRange(i + 1, idx.canal_envio + 1).setValue(modoEnvio);
+    hojaInvitados.getRange(i + 1, idx.estado_api + 1).setValue("PENDIENTE");
+
+    actualizados++;
+  }
+
+  SpreadsheetApp.getUi().alert(`Proceso terminado. Invitados actualizados: ${actualizados}`);
+}
+function listarInvitadosBoda(codigoBoda) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hojaInvitados = ss.getSheetByName("Invitados");
+
+  if (!hojaInvitados) {
+    return { error: true, mensaje: "No existe la hoja Invitados." };
+  }
+
+  const invitados = leerInvitados_(hojaInvitados)
+    .filter(i => String(i.codigoBoda).trim() === String(codigoBoda).trim())
+    .map(i => ({
+      idInvitado: i.idInvitado,
+      invitadoPrincipal: i.invitadoPrincipal,
+      pases: i.pases,
+      celular: i.celular,
+      categoria: i.categoria,
+      quienInvita: i.quienInvita,
+      observaciones: i.observaciones
+    }));
+
+  return {
+    error: false,
+    codigoBoda: codigoBoda,
+    total: invitados.length,
+    invitados: invitados
+  };
+}
+
+function listarEnviosManual(codigoBoda) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hojaInvitados = ss.getSheetByName("Invitados");
+
+  if (!hojaInvitados) {
+    return { error: true, mensaje: "No existe la hoja Invitados." };
+  }
+
+  const invitados = leerInvitados_(hojaInvitados)
+    .filter(i => String(i.codigoBoda).trim() === String(codigoBoda).trim());
+
+  const lista = invitados.map(i => {
+    const enviado = normalizarTexto_(i.enviadoWhatsapp) === "si";
+
+    return {
+      idInvitado: i.idInvitado,
+      invitadoPrincipal: i.invitadoPrincipal,
+      celular: i.celular,
+      pases: i.pases,
+      enviado: enviado,
+      fechaEnvio: formatearFechaCompleta_(i.fechaEnvio),
+      canalEnvio: i.canalEnvio || "MANUAL",
+      estadoApi: i.estadoApi || "PENDIENTE",
+      mensajeWhatsapp: i.mensajeWhatsapp || "",
+      urlWhatsapp: i.urlWhatsapp || ""
+    };
+  });
+
+  const pendientes = lista.filter(i => !i.enviado);
+  const enviados = lista.filter(i => i.enviado);
+
+  return {
+    error: false,
+    codigoBoda: codigoBoda,
+    total: lista.length,
+    enviados: enviados.length,
+    pendientes: pendientes.length,
+    siguiente: pendientes.length ? pendientes[0] : null,
+    invitados: lista
+  };
+}
+
+function marcarEnviadoManual(codigoBoda, idInvitado) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hojaInvitados = ss.getSheetByName("Invitados");
+
+  if (!hojaInvitados) {
+    return { error: true, mensaje: "No existe la hoja Invitados." };
+  }
+
+  const data = hojaInvitados.getDataRange().getValues();
+  const headers = data[0];
+  const idx = obtenerIndicesSGI_(headers);
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+
+    if (
+      String(row[idx.codigo_boda] || "").trim() === String(codigoBoda).trim() &&
+      String(row[idx.id_invitado] || "").trim() === String(idInvitado).trim()
+    ) {
+      hojaInvitados.getRange(i + 1, idx.enviado_whatsapp + 1).setValue("SI");
+      hojaInvitados.getRange(i + 1, idx.fecha_envio + 1).setValue(new Date());
+      hojaInvitados.getRange(i + 1, idx.canal_envio + 1).setValue("MANUAL");
+      hojaInvitados.getRange(i + 1, idx.estado_api + 1).setValue("ENVIADO_MANUAL");
+
+      return {
+        error: false,
+        mensaje: "Invitado marcado como enviado.",
+        codigoBoda: codigoBoda,
+        idInvitado: idInvitado
+      };
+    }
+  }
+
+  return { error: true, mensaje: "No se encontró el invitado." };
+}
+
+function reporteInvitados(codigoBoda) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+  const hojaInvitados = ss.getSheetByName("Invitados");
+  const hojaConfirmaciones = ss.getSheetByName("Confirmaciones");
+
+  if (!hojaInvitados || !hojaConfirmaciones) {
+    return { error: true, mensaje: "Faltan hojas Invitados o Confirmaciones." };
+  }
+
+  const invitados = leerInvitados_(hojaInvitados)
+    .filter(i => String(i.codigoBoda).trim() === String(codigoBoda).trim());
+
+  const confirmaciones = leerConfirmaciones_(hojaConfirmaciones)
+    .filter(c => String(c.codigoBoda).trim() === String(codigoBoda).trim());
+
+  const confirmacionesPorInvitado = {};
+  confirmaciones.forEach(c => {
+    confirmacionesPorInvitado[normalizarTexto_(c.invitado)] = c;
+  });
+
+  const reporte = invitados.map(i => {
+    const conf = confirmacionesPorInvitado[normalizarTexto_(i.invitadoPrincipal)];
+
+    if (!conf) {
+      return {
+        invitadoPrincipal: i.invitadoPrincipal,
+        pasesAsignados: i.pases,
+        estado: "PENDIENTE",
+        pasesConfirmados: 0,
+        pasesLiberados: 0,
+        acompanantes: "",
+        fechaConfirmacion: ""
+      };
+    }
+
+    return {
+      invitadoPrincipal: i.invitadoPrincipal,
+      pasesAsignados: i.pases,
+      estado: conf.asiste === "si" ? "SI ASISTE" : "NO ASISTE",
+      pasesConfirmados: conf.pases,
+      pasesLiberados: conf.pasesLiberados,
+      acompanantes: conf.acompanantes,
+      fechaConfirmacion: formatearFechaCompleta_(conf.fecha)
+    };
+  });
+
+  return {
+    error: false,
+    codigoBoda: codigoBoda,
+    total: reporte.length,
+    reporte: reporte
+  };
+}
+
+function actualizarCentroEnvios() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hojaPanel = ss.getSheetByName("Panel_Envios");
+  const hojaInvitados = ss.getSheetByName("Invitados");
+
+  if (!hojaPanel || !hojaInvitados) {
+    throw new Error("Faltan hojas requeridas: Panel_Envios o Invitados.");
+  }
+
+  const codigoBoda = String(hojaPanel.getRange("B3").getValue() || "").trim();
+  const modo = String(hojaPanel.getRange("E3").getValue() || "MANUAL").trim().toUpperCase();
+
+  if (!codigoBoda) {
+    SpreadsheetApp.getUi().alert("Debes ingresar el código de boda en B3.");
+    return;
+  }
+
+  const data = hojaInvitados.getDataRange().getValues();
+  const headers = data[0];
+  const idx = obtenerIndicesSGI_(headers);
+
+  let pendientes = 0;
+  let invitadoActual = null;
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+
+    const rowCodigoBoda = String(row[idx.codigo_boda] || "").trim();
+    const enviado = normalizarTextoSGI_(row[idx.enviado_whatsapp]);
+
+    if (rowCodigoBoda !== codigoBoda) continue;
+
+    if (enviado !== "si") {
+      pendientes++;
+
+      if (!invitadoActual) {
+        invitadoActual = {
+          invitado: row[idx.invitado_principal],
+          celular: row[idx.celular],
+          pases: row[idx.pases],
+          idInvitado: row[idx.id_invitado],
+          codigoBoda: row[idx.codigo_boda]
+        };
+      }
+    }
+  }
+
+  hojaPanel.getRange("H3").setValue(pendientes);
+  hojaPanel.getRange("A7:G7").clearContent();
+
+  if (!invitadoActual) {
+    hojaPanel.getRange("A7").setValue("No hay invitados pendientes para esta boda.");
+    hojaPanel.getRange("D7").setValue("COMPLETO");
+    SpreadsheetApp.getUi().alert("No hay invitados pendientes para esta boda.");
+    return;
+  }
+
+  hojaPanel.getRange("A7").setValue(invitadoActual.invitado);
+  hojaPanel.getRange("B7").setValue(invitadoActual.celular);
+  hojaPanel.getRange("C7").setValue(invitadoActual.pases);
+  hojaPanel.getRange("D7").setValue("PENDIENTE");
+  hojaPanel.getRange("E7").setValue(modo === "API" ? "ENVIAR API" : "ABRIR WHATSAPP");
+  hojaPanel.getRange("F7").setValue(invitadoActual.idInvitado);
+  hojaPanel.getRange("G7").setValue(invitadoActual.codigoBoda);
+
+  hojaPanel.hideColumns(6, 2);
+}
+
+function abrirWhatsappInvitadoActual() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hojaPanel = ss.getSheetByName("Panel_Envios");
+
+  const codigoBoda = String(hojaPanel.getRange("G7").getValue() || "").trim();
+  const idInvitado = String(hojaPanel.getRange("F7").getValue() || "").trim();
+  const modo = String(hojaPanel.getRange("E3").getValue() || "MANUAL").trim().toUpperCase();
+
+  if (!codigoBoda || !idInvitado) {
+    SpreadsheetApp.getUi().alert("No hay invitado actual cargado. Ejecuta primero: Actualizar Centro de Envíos.");
+    return;
+  }
+
+  if (modo === "API") {
+    SpreadsheetApp.getUi().alert("Modo API aún no está activo. Por ahora usa modo MANUAL.");
+    return;
+  }
+
+  const envio = listarEnviosManual(codigoBoda).invitados.find(i => i.idInvitado === idInvitado);
+
+  if (!envio || !envio.urlWhatsapp) {
+    SpreadsheetApp.getUi().alert("El invitado no tiene URL WhatsApp generada. Ejecuta primero: Generar enlaces y mensajes.");
+    return;
+  }
+
+  const html = HtmlService.createHtmlOutput(`
+    <script>
+      window.open("${envio.urlWhatsapp}", "_blank");
+      google.script.host.close();
+    </script>
+  `);
+
+  SpreadsheetApp.getUi().showModalDialog(html, "Abriendo WhatsApp...");
+}
+
+function marcarInvitadoActualEnviado() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hojaPanel = ss.getSheetByName("Panel_Envios");
+
+  const codigoBoda = String(hojaPanel.getRange("G7").getValue() || "").trim();
+  const idInvitado = String(hojaPanel.getRange("F7").getValue() || "").trim();
+
+  const resultado = marcarEnviadoManual(codigoBoda, idInvitado);
+
+  if (resultado.error) {
+    SpreadsheetApp.getUi().alert(resultado.mensaje);
+    return;
+  }
+
+  actualizarCentroEnvios();
+  SpreadsheetApp.getUi().alert("Invitado marcado como enviado.");
+}
+
+function obtenerConfiguracionSGI_(hoja) {
+  const data = hoja.getDataRange().getValues();
+  const config = {};
+
+  for (let i = 1; i < data.length; i++) {
+    const clave = String(data[i][0] || "").trim();
+    const valor = data[i][1];
+    if (clave) config[clave] = valor;
+  }
+
+  return config;
+}
+
+function obtenerBodasSGI_(hoja) {
+  const data = hoja.getDataRange().getValues();
+  const headers = data[0];
+  const idx = obtenerIndicesSGI_(headers);
+
+  const bodas = {};
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const codigo = String(row[idx.codigo_boda] || "").trim();
+    if (!codigo) continue;
+
+    bodas[codigo] = {
+      codigo: codigo,
+      novios: row[idx.novios],
+      fechaBoda: row[idx.fecha_boda],
+      ciudad: row[idx.ciudad],
+      cierreConfirmacion: row[idx.cierre_confirmacion],
+      htmlUrl: idx.html_url !== undefined ? row[idx.html_url] : ""
     };
   }
 
-  return ContentService
-    .createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
+  return bodas;
 }
 
-function doPost(e) {
-  let payload = {};
+function obtenerPlantillasSGI_(hoja) {
+  const data = hoja.getDataRange().getValues();
+  const headers = data[0];
+  const idx = obtenerIndicesSGI_(headers);
 
-  try {
-    payload = JSON.parse(e.postData.contents);
-  } catch (error) {
-    return ContentService
-      .createTextOutput(JSON.stringify({
-        error: true,
-        mensaje: "Payload inválido."
-      }))
-      .setMimeType(ContentService.MimeType.JSON);
+  const plantillas = {};
+
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const codigo = String(row[idx.codigo_boda] || "").trim();
+    const activo = normalizarTextoSGI_(row[idx.activo]);
+
+    if (!codigo || activo !== "si") continue;
+
+    plantillas[codigo] = {
+      codigo: codigo,
+      mensaje: row[idx.mensaje_whatsapp]
+    };
   }
 
-  const data = registrarConfirmacionInvitado(payload);
-
-  return ContentService
-    .createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
+  return plantillas;
 }
-
-/****************************************************
- * UTILIDADES
- ****************************************************/
 
 function calcularDiasHasta_(fecha) {
   if (!fecha) return 0;
@@ -390,6 +819,10 @@ function formatearFechaCompleta_(fecha) {
   return String(fecha || "");
 }
 
+function formatearFechaSGI_(fecha) {
+  return formatearFechaCompleta_(fecha);
+}
+
 function normalizarTexto_(valor) {
   return String(valor || "")
     .trim()
@@ -398,30 +831,67 @@ function normalizarTexto_(valor) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-/****************************************************
- * PRUEBAS
- ****************************************************/
+function normalizarTextoSGI_(valor) {
+  return normalizarTexto_(valor);
+}
+
+function normalizarHeaderSGI_(valor) {
+  return String(valor || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "_");
+}
+
+function obtenerIndicesSGI_(headers) {
+  const idx = {};
+
+  headers.forEach((h, i) => {
+    const key = normalizarHeaderSGI_(h);
+    idx[key] = i;
+  });
+
+  return idx;
+}
+
+function construirMensajeDesdePlantillaSGI_(plantilla, valores) {
+  let mensaje = String(plantilla || "");
+
+  Object.keys(valores).forEach(clave => {
+    const regex = new RegExp(`{{${clave}}}`, "g");
+    mensaje = mensaje.replace(regex, valores[clave] || "");
+  });
+
+  return mensaje;
+}
+
+function construirCelularWhatsappSGI_(celular, pais) {
+  let numero = String(celular || "").replace(/\D/g, "");
+
+  if (!numero) return "";
+
+  if (numero.startsWith(pais)) return numero;
+
+  return pais + numero;
+}
 
 function probarDashboard() {
-  const data = obtenerDashboard();
-  Logger.log(JSON.stringify(data, null, 2));
+  Logger.log(JSON.stringify(obtenerDashboard(), null, 2));
 }
 
 function probarBuscarInvitado() {
-  const data = buscarInvitadoConfirmacion("B001", "B001-001");
-  Logger.log(JSON.stringify(data, null, 2));
+  Logger.log(JSON.stringify(buscarInvitadoConfirmacion("B001", "B001-001"), null, 2));
 }
 
-function probarRegistroConfirmacion() {
-  const data = registrarConfirmacionInvitado({
-    codigoBoda: "B001",
-    idInvitado: "B001-001",
-    invitadoPrincipal: "Carlos Pérez",
-    asiste: "SI",
-    pasesAsignados: 3,
-    pasesConfirmados: 2,
-    acompanantes: "Acompañante Prueba"
-  });
+function probarListarInvitadosBoda() {
+  Logger.log(JSON.stringify(listarInvitadosBoda("B001"), null, 2));
+}
 
-  Logger.log(JSON.stringify(data, null, 2));
+function probarListarEnviosManual() {
+  Logger.log(JSON.stringify(listarEnviosManual("B001"), null, 2));
+}
+
+function probarReporteInvitados() {
+  Logger.log(JSON.stringify(reporteInvitados("B001"), null, 2));
 }
