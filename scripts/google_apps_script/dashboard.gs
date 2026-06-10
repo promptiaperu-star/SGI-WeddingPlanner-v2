@@ -1089,6 +1089,63 @@ function listarInvitadosMesas_(codigoBoda) {
   };
 }
 
+function guardarAsignacionMesas_(codigoBoda, payloadJson) {
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hoja = ss.getSheetByName("Asignacion_Mesas");
+
+  if (!hoja) {
+    return {
+      error: true,
+      mensaje: "No existe la hoja Asignacion_Mesas."
+    };
+  }
+
+  const payload = JSON.parse(payloadJson || "[]");
+
+  if (!Array.isArray(payload)) {
+    return {
+      error: true,
+      mensaje: "Payload inválido."
+    };
+  }
+
+  const data = hoja.getDataRange().getValues();
+
+  if (data.length > 1) {
+    for (let i = data.length - 1; i >= 1; i--) {
+      if (String(data[i][0]).trim() === String(codigoBoda).trim()) {
+        hoja.deleteRow(i + 1);
+      }
+    }
+  }
+
+  let registros = 0;
+
+  payload.forEach(item => {
+
+    if (!item.id_invitado || !item.mesa) return;
+
+    hoja.appendRow([
+      codigoBoda,                     // codigo_boda
+      item.mesa,                      // mesa
+      item.id_invitado,               // id_invitado
+      item.nombre_invitado || "",     // nombre_invitado
+      item.tipo || "",                // tipo
+      item.grupo_origen || "",        // grupo_origen
+      new Date()                      // fecha_asignacion
+    ]);
+
+    registros++;
+  });
+
+  return {
+    error: false,
+    mensaje: "Distribución de mesas guardada correctamente.",
+    registros: registros
+  };
+}
+
 function reiniciarAsignacionMesas_(codigoBoda) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hoja = ss.getSheetByName("Asignacion_Mesas");
