@@ -448,9 +448,11 @@ function generarLinksYMensajes() {
   });
 
     const celular = construirCelularWhatsappSGI_(row[idx.celular], paisWhatsapp);
+    const textoWhatsapp = encodeURIComponent(mensaje);
+
     const urlWhatsapp = celular
-      ? `https://wa.me/${celular}?text=${encodeURIComponent(mensaje)}`
-      : "";
+     ? `https://web.whatsapp.com/send?phone=${celular}&text=${textoWhatsapp}`
+     : "";
 
     hojaInvitados.getRange(i + 1, idx.link_confirmacion + 1).setValue(linkConfirmacion);
     hojaInvitados.getRange(i + 1, idx.mensaje_whatsapp + 1).setValue(mensaje);
