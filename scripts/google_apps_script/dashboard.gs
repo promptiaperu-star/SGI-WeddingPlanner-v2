@@ -1007,74 +1007,73 @@ function listarMesas_(codigoBoda) {
   return { error: false, mesas };
 }
 
-function listarInvitadosMesa_(codigoBoda) {
+function listarInvitadosMesas_(codigoBoda) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hojaConfirmaciones = ss.getSheetByName("Confirmaciones");
   const hojaAsignacion = ss.getSheetByName("Asignacion_Mesas");
 
-  if (!hojaConfirmaciones) return { error: true, mensaje: "No existe la hoja Confirmaciones." };
-  if (!hojaAsignacion) return { error: true, mensaje: "No existe la hoja Asignacion_Mesas." };
+  if (!hojaConfirmaciones) {
+    return { error: true, mensaje: "No existe la hoja Confirmaciones." };
+  }
 
-  const confData = hojaConfirmaciones.getDataRange().getValues();
-  const confHeaders = confData.shift();
-  const confIdx = obtenerIndicesSGI_(confHeaders);
-
-  const asignData = hojaAsignacion.getDataRange().getValues();
-  const asignHeaders = asignData.shift();
-  const asignIdx = obtenerIndicesSGI_(asignHeaders);
+  const dataConf = hojaConfirmaciones.getDataRange().getValues();
+  const headersConf = dataConf[0];
+  const idxConf = obtenerIndicesSGI_(headersConf);
 
   const asignaciones = {};
-  asignData.forEach(r => {
-    const boda = String(r[asignIdx.codigo_boda] || "").trim();
-    const id = String(r[asignIdx.id_invitado] || "").trim();
-    if (boda === String(codigoBoda).trim() && id) {
-      asignaciones[id] = r[asignIdx.mesa] || "";
+  if (hojaAsignacion && hojaAsignacion.getLastRow() > 1) {
+    const dataAsig = hojaAsignacion.getDataRange().getValues();
+    const headersAsig = dataAsig[0];
+    const idxAsig = obtenerIndicesSGI_(headersAsig);
+
+    for (let i = 1; i < dataAsig.length; i++) {
+      const row = dataAsig[i];
+      if (String(row[idxAsig.codigo_boda]).trim() !== String(codigoBoda).trim()) continue;
+      asignaciones[String(row[idxAsig.id_invitado]).trim()] = String(row[idxAsig.mesa] || "").trim();
     }
-  });
+  }
 
   const invitados = [];
 
-  confData.forEach(r => {
-    const boda = String(r[confIdx.codigo_boda] || "").trim();
-    const asiste = normalizarTextoSGI_(r[confIdx.asiste]);
-    if (boda !== String(codigoBoda).trim() || asiste !== "si") return;
+  for (let i = 1; i < dataConf.length; i++) {
+    const row = dataConf[i];
+    if (String(row[idxConf.codigo_boda]).trim() !== String(codigoBoda).trim()) continue;
+    if (normalizarTextoSGI_(row[idxConf.asiste]) !== "si") continue;
 
-    const invitado = String(r[confIdx.invitado] || "").trim();
-    const pases = Number(r[confIdx.pases]) || 0;
-    const acomp = String(r[confIdx.acompanantes] || "").trim();
+    const idBase = String(row[idxConf.invitado] || "").trim();
+    const nombreBase = String(row[idxConf.invitado] || "").trim();
+    const acompanantes = String(row[idxConf.acompanantes] || "").trim();
 
     invitados.push({
-      idInvitado: `${codigoBoda}_${invitado}_principal`,
-      nombreInvitado: invitado,
-      tipo: pases >= 3 ? "grupo" : pases === 2 ? "pareja" : "principal",
-      grupoOrigen: invitado,
-      mesa: asignaciones[`${codigoBoda}_${invitado}_principal`] || ""
+      idInvitado: `${codigoBoda}_${idBase}_principal`,
+      nombreInvitado: nombreBase,
+      tipo: acompanantes ? "pareja" : "principal",
+      grupoOrigen: nombreBase,
+      mesa: asignaciones[`${codigoBoda}_${idBase}_principal`] || ""
     });
 
-    if (acomp) {
-      acomp.split(",").map(x => x.trim()).filter(Boolean).forEach((nombre, i) => {
-        const id = `${codigoBoda}_${invitado}_acompanante_${i + 1}`;
+    if (acompanantes) {
+      acompanantes.split(",").map(a => a.trim()).filter(Boolean).forEach((nombre, index) => {
         invitados.push({
-          idInvitado: id,
+          idInvitado: `${codigoBoda}_${idBase}_acompanante_${index + 1}`,
           nombreInvitado: nombre,
           tipo: "acompanante",
-          grupoOrigen: invitado,
-          mesa: asignaciones[id] || ""
+          grupoOrigen: nombreBase,
+          mesa: asignaciones[`${codigoBoda}_${idBase}_acompanante_${index + 1}`] || ""
         });
       });
     }
-  });
+  }
 
+  const total = invitados.length;
   const asignados = invitados.filter(i => i.mesa).length;
-  const pendientes = invitados.length - asignados;
-  const avance = invitados.length ? Math.round((asignados / invitados.length) * 100) : 0;
 
   return {
     error: false,
-    total: invitados.length,
+    total,
     asignados,
-    pendientes,
-    avance,
+    pendientes: total - asignados,
+    avance: total ? Math.round((asignados / total) * 100) : 0,
     invitados
   };
 }
@@ -1177,6 +1176,8 @@ function reporteMesas_(codigoBoda) {
     reporte
   };
 }
+
+
 
 function probarDashboard() {
   Logger.log(JSON.stringify(obtenerDashboard(), null, 2));
