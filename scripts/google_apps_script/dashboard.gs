@@ -39,8 +39,8 @@ function doGet(e) {
       data = marcarEnviadoManual(e.parameter.boda, e.parameter.id);
     } else if (accion === "listarMesas") {
       data = listarMesas_(e.parameter.boda);
-    } else if (accion === "listarInvitadosMesa") {
-      data = listarInvitadosMesa_(e.parameter.boda);
+    } else if (accion === "listarInvitadosMesas") {
+      data = listarInvitadosMesas_(e.parameter.boda);
     } else if (accion === "guardarAsignacionMesas") {
       data = guardarAsignacionMesas_(e.parameter.boda, e.parameter.payload);
     } else if (accion === "reiniciarAsignacionMesas") {
