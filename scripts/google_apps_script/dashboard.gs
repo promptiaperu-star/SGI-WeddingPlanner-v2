@@ -37,6 +37,16 @@ function doGet(e) {
       data = descargarReporteInvitadosXlsx(e.parameter.boda);
     } else if (accion === "marcarEnviadoManual") {
       data = marcarEnviadoManual(e.parameter.boda, e.parameter.id);
+    } else if (accion === "listarMesas") {
+      data = listarMesas_(e.parameter.boda);
+    } else if (accion === "listarInvitadosMesa") {
+      data = listarInvitadosMesa_(e.parameter.boda);
+    } else if (accion === "guardarAsignacionMesas") {
+      data = guardarAsignacionMesas_(e.parameter.boda, e.parameter.payload);
+    } else if (accion === "reiniciarAsignacionMesas") {
+      data = reiniciarAsignacionMesas_(e.parameter.boda);
+    } else if (accion === "reporteMesas") {
+      data = reporteMesas_(e.parameter.boda);
     } else if (e && e.parameter && e.parameter.boda && e.parameter.id) {
       data = buscarInvitadoConfirmacion(e.parameter.boda, e.parameter.id);
     } else {
@@ -972,6 +982,200 @@ function construirCelularWhatsappSGI_(celular, pais) {
   if (numero.startsWith(pais)) return numero;
 
   return pais + numero;
+}
+
+function listarMesas_(codigoBoda) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hoja = ss.getSheetByName("Mesas");
+  if (!hoja) return { error: true, mensaje: "No existe la hoja Mesas." };
+
+  const data = hoja.getDataRange().getValues();
+  const headers = data.shift();
+  const idx = obtenerIndicesSGI_(headers);
+
+  const mesas = data
+    .filter(r => String(r[idx.codigo_boda]).trim() === String(codigoBoda).trim())
+    .map(r => ({
+      codigoBoda: r[idx.codigo_boda],
+      mesa: r[idx.mesa],
+      capacidad: Number(r[idx.capacidad]) || 10,
+      ubicacionX: Number(r[idx.ubicacion_x]) || 0,
+      ubicacionY: Number(r[idx.ubicacion_y]) || 0,
+      tipoMesa: r[idx.tipo_mesa] || ""
+    }));
+
+  return { error: false, mesas };
+}
+
+function listarInvitadosMesa_(codigoBoda) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hojaConfirmaciones = ss.getSheetByName("Confirmaciones");
+  const hojaAsignacion = ss.getSheetByName("Asignacion_Mesas");
+
+  if (!hojaConfirmaciones) return { error: true, mensaje: "No existe la hoja Confirmaciones." };
+  if (!hojaAsignacion) return { error: true, mensaje: "No existe la hoja Asignacion_Mesas." };
+
+  const confData = hojaConfirmaciones.getDataRange().getValues();
+  const confHeaders = confData.shift();
+  const confIdx = obtenerIndicesSGI_(confHeaders);
+
+  const asignData = hojaAsignacion.getDataRange().getValues();
+  const asignHeaders = asignData.shift();
+  const asignIdx = obtenerIndicesSGI_(asignHeaders);
+
+  const asignaciones = {};
+  asignData.forEach(r => {
+    const boda = String(r[asignIdx.codigo_boda] || "").trim();
+    const id = String(r[asignIdx.id_invitado] || "").trim();
+    if (boda === String(codigoBoda).trim() && id) {
+      asignaciones[id] = r[asignIdx.mesa] || "";
+    }
+  });
+
+  const invitados = [];
+
+  confData.forEach(r => {
+    const boda = String(r[confIdx.codigo_boda] || "").trim();
+    const asiste = normalizarTextoSGI_(r[confIdx.asiste]);
+    if (boda !== String(codigoBoda).trim() || asiste !== "si") return;
+
+    const invitado = String(r[confIdx.invitado] || "").trim();
+    const pases = Number(r[confIdx.pases]) || 0;
+    const acomp = String(r[confIdx.acompanantes] || "").trim();
+
+    invitados.push({
+      idInvitado: `${codigoBoda}_${invitado}_principal`,
+      nombreInvitado: invitado,
+      tipo: pases >= 3 ? "grupo" : pases === 2 ? "pareja" : "principal",
+      grupoOrigen: invitado,
+      mesa: asignaciones[`${codigoBoda}_${invitado}_principal`] || ""
+    });
+
+    if (acomp) {
+      acomp.split(",").map(x => x.trim()).filter(Boolean).forEach((nombre, i) => {
+        const id = `${codigoBoda}_${invitado}_acompanante_${i + 1}`;
+        invitados.push({
+          idInvitado: id,
+          nombreInvitado: nombre,
+          tipo: "acompanante",
+          grupoOrigen: invitado,
+          mesa: asignaciones[id] || ""
+        });
+      });
+    }
+  });
+
+  const asignados = invitados.filter(i => i.mesa).length;
+  const pendientes = invitados.length - asignados;
+  const avance = invitados.length ? Math.round((asignados / invitados.length) * 100) : 0;
+
+  return {
+    error: false,
+    total: invitados.length,
+    asignados,
+    pendientes,
+    avance,
+    invitados
+  };
+}
+
+function guardarAsignacionMesas_(codigoBoda, payloadJson) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hoja = ss.getSheetByName("Asignacion_Mesas");
+  if (!hoja) return { error: true, mensaje: "No existe la hoja Asignacion_Mesas." };
+
+  const payload = JSON.parse(payloadJson || "[]");
+  if (!Array.isArray(payload)) return { error: true, mensaje: "Payload inválido." };
+
+  const data = hoja.getDataRange().getValues();
+  const headers = data[0];
+  const idx = obtenerIndicesSGI_(headers);
+
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (String(data[i][idx.codigo_boda]).trim() === String(codigoBoda).trim()) {
+      hoja.deleteRow(i + 1);
+    }
+  }
+
+  payload.forEach(item => {
+    if (!item.idInvitado || !item.nombreInvitado || !item.mesa) return;
+
+    hoja.appendRow([
+      codigoBoda,
+      item.mesa,
+      item.idInvitado,
+      item.nombreInvitado,
+      item.tipo || "",
+      item.grupoOrigen || "",
+      new Date()
+    ]);
+  });
+
+  return {
+    error: false,
+    mensaje: "Distribución de mesas guardada correctamente.",
+    registros: payload.length
+  };
+}
+
+function reiniciarAsignacionMesas_(codigoBoda) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const hoja = ss.getSheetByName("Asignacion_Mesas");
+  if (!hoja) return { error: true, mensaje: "No existe la hoja Asignacion_Mesas." };
+
+  const data = hoja.getDataRange().getValues();
+  const headers = data[0];
+  const idx = obtenerIndicesSGI_(headers);
+
+  let eliminados = 0;
+
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (String(data[i][idx.codigo_boda]).trim() === String(codigoBoda).trim()) {
+      hoja.deleteRow(i + 1);
+      eliminados++;
+    }
+  }
+
+  return {
+    error: false,
+    mensaje: "Asignación de mesas reiniciada.",
+    eliminados
+  };
+}
+
+function reporteMesas_(codigoBoda) {
+  const mesasResp = listarMesas_(codigoBoda);
+  const invitadosResp = listarInvitadosMesa_(codigoBoda);
+
+  if (mesasResp.error) return mesasResp;
+  if (invitadosResp.error) return invitadosResp;
+
+  if (invitadosResp.pendientes > 0) {
+    return {
+      error: true,
+      mensaje: `No se puede generar reporte. Faltan ${invitadosResp.pendientes} invitados por asignar.`
+    };
+  }
+
+  const reporte = mesasResp.mesas.map(m => ({
+    mesa: m.mesa,
+    capacidad: m.capacidad,
+    tipoMesa: m.tipoMesa,
+    invitados: invitadosResp.invitados
+      .filter(i => String(i.mesa).trim() === String(m.mesa).trim())
+      .map(i => ({
+        nombreInvitado: i.nombreInvitado,
+        tipo: i.tipo,
+        grupoOrigen: i.grupoOrigen
+      }))
+  }));
+
+  return {
+    error: false,
+    codigoBoda,
+    totalInvitados: invitadosResp.total,
+    reporte
+  };
 }
 
 function probarDashboard() {

@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Distribución de Mesas</title>
+
+<style>
+
+body{
+  font-family: Arial, sans-serif;
+  margin:0;
+  padding:20px;
+  background:#f5f6fa;
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+.kpi{
+  background:white;
+  padding:10px 20px;
+  border-radius:10px;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
+}
+
+.layout{
+  display:grid;
+  grid-template-columns:300px 1fr;
+  gap:20px;
+}
+
+.panel{
+  background:white;
+  border-radius:12px;
+  padding:15px;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
+}
+
+.listaInvitados{
+  min-height:600px;
+}
+
+.mesas{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  gap:15px;
+}
+
+.mesa{
+  background:white;
+  border:2px solid #ddd;
+  border-radius:12px;
+  padding:10px;
+  min-height:200px;
+}
+
+.mesaTitulo{
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.invitado{
+  background:#eef2ff;
+  border-radius:8px;
+  padding:8px;
+  margin-bottom:6px;
+  cursor:grab;
+}
+
+.botones{
+  margin-top:20px;
+  display:flex;
+  gap:10px;
+}
+
+button{
+  padding:10px 16px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+.btnGuardar{
+  background:#16a34a;
+  color:white;
+}
+
+.btnReiniciar{
+  background:#dc2626;
+  color:white;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+  <h2>Distribución de Mesas</h2>
+
+  <div class="kpi">
+    Avance:
+    <span id="avanceMesas">0%</span>
+  </div>
+</div>
+
+<div class="layout">
+
+  <div class="panel">
+
+    <h3>Invitados pendientes</h3>
+
+    <div
+      id="listaPendientes"
+      class="listaInvitados">
+    </div>
+
+  </div>
+
+  <div class="panel">
+
+    <h3>Mesas</h3>
+
+    <div
+      id="contenedorMesas"
+      class="mesas">
+    </div>
+
+  </div>
+
+</div>
+
+<div class="botones">
+
+  <button
+    class="btnGuardar"
+    onclick="guardarAsignacion()">
+    Guardar
+  </button>
+
+  <button
+    class="btnReiniciar"
+    onclick="reiniciarAsignacion()">
+    Reiniciar
+  </button>
+
+</div>
+
+<script>
+const WEBAPP_URL = "https://script.google.com/macros/s/AKfycbywOx2N_2L_3BM78Dnk3yWGbGHBmBayFnSnN5y-lQbtof9PWHtG7I-61v6POJNFHQ8ccA/exec";
+const CODIGO_BODA = "TEST001";
+
+let invitados = [];
+let mesas = [];
+
+async function cargarDatos(){
+  const rMesas = await fetch(`${WEBAPP_URL}?accion=listarMesas&boda=${CODIGO_BODA}`);
+  const dMesas = await rMesas.json();
+
+  const rInv = await fetch(`${WEBAPP_URL}?accion=listarInvitadosMesas&boda=${CODIGO_BODA}`);
+  const dInv = await rInv.json();
+
+  mesas = dMesas.mesas || [];
+  invitados = dInv.invitados || [];
+
+  render();
+}
+
+function render(){
+  const lista = document.getElementById("listaPendientes");
+  const cont = document.getElementById("contenedorMesas");
+
+  lista.innerHTML = invitados
+    .filter(i => !i.mesa)
+    .map(i => cardInvitado(i))
+    .join("");
+
+  cont.innerHTML = mesas.map(m => `
+    <div class="mesa" ondragover="event.preventDefault()" ondrop="soltar(event,'${m.mesa}')">
+      <div class="mesaTitulo">${m.mesa} (${ocupados(m.mesa)}/${m.capacidad})</div>
+      ${(invitados.filter(i => i.mesa === m.mesa).map(i => cardInvitado(i))).join("")}
+    </div>
+  `).join("");
+
+  actualizarAvance();
+}
+
+function cardInvitado(i){
+  return `
+    <div class="invitado" draggable="true" ondragstart="arrastrar(event,'${i.idInvitado}')">
+      ${icono(i.tipo)} ${i.nombreInvitado}
+    </div>
+  `;
+}
+
+function icono(tipo){
+  if(tipo === "pareja") return "💑";
+  if(tipo === "familia") return "👨‍👩‍👧‍👦";
+  if(tipo === "acompanante") return "👤";
+  return "👤";
+}
+
+function ocupados(mesa){
+  return invitados.filter(i => i.mesa === mesa).length;
+}
+
+function arrastrar(ev,id){
+  ev.dataTransfer.setData("idInvitado", id);
+}
+
+function soltar(ev,mesa){
+  const id = ev.dataTransfer.getData("idInvitado");
+  const mesaObj = mesas.find(m => m.mesa === mesa);
+
+  if(ocupados(mesa) >= Number(mesaObj.capacidad || 10)){
+    alert("Mesa llena.");
+    return;
+  }
+
+  invitados = invitados.map(i =>
+    i.idInvitado === id ? {...i, mesa} : i
+  );
+
+  render();
+}
+
+function actualizarAvance(){
+  const total = invitados.length;
+  const asignados = invitados.filter(i => i.mesa).length;
+  const avance = total ? Math.round((asignados / total) * 100) : 0;
+  document.getElementById("avanceMesas").innerText = `${avance}%`;
+}
+
+async function guardarAsignacion(){
+  const payload = invitados.map(i => ({
+    codigo_boda: CODIGO_BODA,
+    mesa: i.mesa || "",
+    id_invitado: i.idInvitado,
+    nombre_invitado: i.nombreInvitado,
+    tipo: i.tipo,
+    grupo_origen: i.grupoOrigen
+  }));
+
+  const res = await fetch(WEBAPP_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      accion: "guardarAsignacionMesas",
+      boda: CODIGO_BODA,
+      payload
+    })
+  });
+
+  const data = await res.json();
+  alert(data.mensaje || "Asignación guardada.");
+}
+
+function reiniciarAsignacion(){
+  if(!confirm("¿Reiniciar toda la asignación de mesas?")) return;
+
+  invitados = invitados.map(i => ({...i, mesa:""}));
+  render();
+}
+
+cargarDatos();
+</script>
+
+</body>
+</html>
