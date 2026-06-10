@@ -486,6 +486,7 @@ function generarLinksYMensajes() {
 
   SpreadsheetApp.getUi().alert(`Proceso terminado. Invitados actualizados: ${actualizados}`);
 }
+
 function listarInvitadosBoda(codigoBoda) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hojaInvitados = ss.getSheetByName("Invitados");
@@ -1171,7 +1172,7 @@ function reiniciarAsignacionMesas_(codigoBoda) {
 
 function reporteMesas_(codigoBoda) {
   const mesasResp = listarMesas_(codigoBoda);
-  const invitadosResp = listarInvitadosMesa_(codigoBoda);
+  const invitadosResp = listarInvitadosMesas_(codigoBoda);
 
   if (mesasResp.error) return mesasResp;
   if (invitadosResp.error) return invitadosResp;
