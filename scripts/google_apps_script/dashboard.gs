@@ -67,7 +67,10 @@ function doPost(e) {
   try {
     payload = JSON.parse(e.postData.contents);
   } catch (error) {
-    return jsonOutput_({ error: true, mensaje: "Payload inválido." });
+    return jsonOutput_({
+      error: true,
+      mensaje: "Payload inválido."
+    });
   }
 
   let data;
@@ -75,11 +78,19 @@ function doPost(e) {
   try {
     if (payload.accion === "marcarEnviadoManual") {
       data = marcarEnviadoManual(payload.codigoBoda, payload.idInvitado);
+
+    } else if (payload.accion === "guardarAsignacionMesas") {
+      data = guardarAsignacionMesas_(payload.boda, payload.payload);
+
     } else {
       data = registrarConfirmacionInvitado(payload);
     }
+
   } catch (error) {
-    data = { error: true, mensaje: error.toString() };
+    data = {
+      error: true,
+      mensaje: error.toString()
+    };
   }
 
   return jsonOutput_(data);
@@ -1075,45 +1086,6 @@ function listarInvitadosMesas_(codigoBoda) {
     pendientes: total - asignados,
     avance: total ? Math.round((asignados / total) * 100) : 0,
     invitados
-  };
-}
-
-function guardarAsignacionMesas_(codigoBoda, payloadJson) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const hoja = ss.getSheetByName("Asignacion_Mesas");
-  if (!hoja) return { error: true, mensaje: "No existe la hoja Asignacion_Mesas." };
-
-  const payload = JSON.parse(payloadJson || "[]");
-  if (!Array.isArray(payload)) return { error: true, mensaje: "Payload inválido." };
-
-  const data = hoja.getDataRange().getValues();
-  const headers = data[0];
-  const idx = obtenerIndicesSGI_(headers);
-
-  for (let i = data.length - 1; i >= 1; i--) {
-    if (String(data[i][idx.codigo_boda]).trim() === String(codigoBoda).trim()) {
-      hoja.deleteRow(i + 1);
-    }
-  }
-
-  payload.forEach(item => {
-    if (!item.idInvitado || !item.nombreInvitado || !item.mesa) return;
-
-    hoja.appendRow([
-      codigoBoda,
-      item.mesa,
-      item.idInvitado,
-      item.nombreInvitado,
-      item.tipo || "",
-      item.grupoOrigen || "",
-      new Date()
-    ]);
-  });
-
-  return {
-    error: false,
-    mensaje: "Distribución de mesas guardada correctamente.",
-    registros: payload.length
   };
 }
 
