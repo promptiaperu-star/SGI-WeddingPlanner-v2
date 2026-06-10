@@ -167,8 +167,20 @@ async function cargarDatos(){
   const rInv = await fetch(`${WEBAPP_URL}?accion=listarInvitadosMesas&boda=${CODIGO_BODA}`);
   const dInv = await rInv.json();
 
+  console.log("RESPUESTA MESAS:", dMesas);
+  console.log("RESPUESTA INVITADOS:", dInv);
+
   mesas = dMesas.mesas || [];
-  invitados = dInv.invitados || [];
+  invitados = (dInv.invitados || []).map(i => ({
+  ...i,
+  mesa: i.mesa || "",
+  nombreInvitado: i.nombreInvitado || i.nombre_invitado || i.nombre || ""
+  }));
+
+  if (!invitados.length) {
+   document.getElementById("listaPendientes").innerHTML =
+    `<div style="color:red;font-weight:bold;">No se cargaron invitados. Revisar endpoint listarInvitadosMesas.</div>`;
+  }
 
   render();
 }
@@ -195,7 +207,7 @@ function render(){
 function cardInvitado(i){
   return `
     <div class="invitado" draggable="true" ondragstart="arrastrar(event,'${i.idInvitado}')">
-      ${icono(i.tipo)} ${i.nombreInvitado}
+      ${icono(i.tipo)} ${i.nombreInvitado || i.nombre_invitado || i.nombre || ""}
     </div>
   `;
 }
@@ -243,7 +255,7 @@ async function guardarAsignacion(){
     codigo_boda: CODIGO_BODA,
     mesa: i.mesa || "",
     id_invitado: i.idInvitado,
-    nombre_invitado: i.nombreInvitado,
+    nombre_invitado: i.nombreInvitado || i.nombre_invitado || i.nombre || "",
     tipo: i.tipo,
     grupo_origen: i.grupoOrigen
   }));
