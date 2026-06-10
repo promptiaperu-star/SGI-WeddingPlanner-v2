@@ -305,28 +305,25 @@ async function cargarEnviosManual(){
     const res = await fetch(`${WEBAPP_URL}?accion=listarEnviosManual&boda=${encodeURIComponent(bodaActual.codigo)}`);
     const data = await res.json();
 
+    window.enviosManualData = data.invitados || [];
+
     if(data.error){
       tabla.innerHTML = `<div class="alert">${data.mensaje}</div>`;
       return;
     }
 
-    envioManualActual = data.siguiente;
+    envioManualActual = data.siguiente || null;
 
     if(envioManualActual){
-      document.getElementById("manualInvitado").innerText = envioManualActual.invitadoPrincipal || "-";
-      document.getElementById("manualCelular").innerText = envioManualActual.celular || "-";
-      document.getElementById("manualPases").innerText = envioManualActual.pases || 0;
-      document.getElementById("manualEstado").innerText = "Pendiente";
-      document.getElementById("manualEstado").className = "status-pill status-pending";
-      document.getElementById("manualMensaje").innerText = envioManualActual.mensajeWhatsapp || "Sin mensaje generado.";
+     seleccionarEnvioManual(envioManualActual.idInvitado);
     }else{
-      document.getElementById("manualInvitado").innerText = "Sin pendientes";
-      document.getElementById("manualCelular").innerText = "-";
-      document.getElementById("manualPases").innerText = "-";
-      document.getElementById("manualEstado").innerText = "Completo";
-      document.getElementById("manualEstado").className = "status-pill status-sent";
-      document.getElementById("manualMensaje").innerText = "No hay invitados pendientes de envío.";
-    }
+     document.getElementById("manualInvitado").innerText = "Sin pendientes";
+     document.getElementById("manualCelular").innerText = "-";
+     document.getElementById("manualPases").innerText = "-";
+     document.getElementById("manualEstado").innerText = "Completo";
+     document.getElementById("manualEstado").className = "status-pill status-sent";
+     document.getElementById("manualMensaje").innerText = "No hay invitados pendientes de envío.";
+   }
 
     tabla.innerHTML = `
       <p><strong>Total:</strong> ${data.total} | <strong>Enviados:</strong> ${data.enviados} | <strong>Pendientes:</strong> ${data.pendientes}</p>
@@ -341,14 +338,14 @@ async function cargarEnviosManual(){
           </tr>
         </thead>
         <tbody>
-          ${data.invitados.map(i => `
-            <tr>
-              <td>${i.invitadoPrincipal || ""}</td>
-              <td>${i.celular || ""}</td>
-              <td>${i.pases || 0}</td>
-              <td><span class="status-pill ${i.enviado ? "status-sent" : "status-pending"}">${i.enviado ? "Enviado" : "Pendiente"}</span></td>
-              <td>${i.fechaEnvio || ""}</td>
-            </tr>
+          ${(data.invitados || []).map(i => `
+            <tr onclick="seleccionarEnvioManual('${i.idInvitado}')" style="cursor:pointer;">
+             <td><strong>${i.invitadoPrincipal || ""}</strong></td>
+             <td>${i.celular || ""}</td>
+             <td>${i.pases || 0}</td>
+             <td><span class="status-pill ${i.enviado ? "status-sent" : "status-pending"}">${i.enviado ? "Enviado" : "Pendiente"}</span></td>
+             <td>${i.fechaEnvio || ""}</td>
+           </tr>
           `).join("")}
         </tbody>
       </table>
@@ -358,10 +355,30 @@ async function cargarEnviosManual(){
   }
 }
 
+function seleccionarEnvioManual(idInvitado){
+  const invitado = (window.enviosManualData || []).find(i => i.idInvitado === idInvitado);
+
+  if(!invitado){
+    alert("No se encontró el invitado seleccionado.");
+    return;
+  }
+
+  envioManualActual = invitado;
+
+  document.getElementById("manualInvitado").innerText = invitado.invitadoPrincipal || "-";
+  document.getElementById("manualCelular").innerText = invitado.celular || "-";
+  document.getElementById("manualPases").innerText = invitado.pases || 0;
+  document.getElementById("manualEstado").innerText = invitado.enviado ? "Enviado" : "Pendiente";
+  document.getElementById("manualEstado").className = invitado.enviado
+    ? "status-pill status-sent"
+    : "status-pill status-pending";
+  document.getElementById("manualMensaje").innerText = invitado.mensajeWhatsapp || "Sin mensaje generado.";
+}
+
 async function cargarReporteInvitados(){
   const cont = document.getElementById("tablaReporteInvitados");
   cont.innerHTML = "Cargando reporte de invitados...";
-
+  
   try{
     const res = await fetch(`${WEBAPP_URL}?accion=reporteInvitados&boda=${encodeURIComponent(bodaActual.codigo)}`);
     const data = await res.json();
