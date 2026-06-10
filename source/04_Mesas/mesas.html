@@ -161,28 +161,56 @@ let invitados = [];
 let mesas = [];
 
 async function cargarDatos(){
-  const rMesas = await fetch(`${WEBAPP_URL}?accion=listarMesas&boda=${CODIGO_BODA}`);
-  const dMesas = await rMesas.json();
+  try{
+    const rMesas = await fetch(`${WEBAPP_URL}?accion=listarMesas&boda=${encodeURIComponent(CODIGO_BODA)}`);
+    const dMesas = await rMesas.json();
 
-  const rInv = await fetch(`${WEBAPP_URL}?accion=listarInvitadosMesas&boda=${CODIGO_BODA}`);
-  const dInv = await rInv.json();
+    const rInv = await fetch(`${WEBAPP_URL}?accion=listarInvitadosMesas&boda=${encodeURIComponent(CODIGO_BODA)}`);
+    const dInv = await rInv.json();
 
-  console.log("RESPUESTA MESAS:", dMesas);
-  console.log("RESPUESTA INVITADOS:", dInv);
+    console.log("RESPUESTA MESAS:", dMesas);
+    console.log("RESPUESTA INVITADOS:", dInv);
 
-  mesas = dMesas.mesas || [];
-  invitados = (dInv.invitados || []).map(i => ({
-  ...i,
-  mesa: i.mesa || "",
-  nombreInvitado: i.nombreInvitado || i.nombre_invitado || i.nombre || ""
-  }));
+    if(dMesas.error){
+      document.getElementById("contenedorMesas").innerHTML =
+        `<div style="color:red;font-weight:bold;">${dMesas.mensaje}</div>`;
+      return;
+    }
 
-  if (!invitados.length) {
-   document.getElementById("listaPendientes").innerHTML =
-    `<div style="color:red;font-weight:bold;">No se cargaron invitados. Revisar endpoint listarInvitadosMesas.</div>`;
+    if(dInv.error){
+      document.getElementById("listaPendientes").innerHTML =
+        `<div style="color:red;font-weight:bold;">${dInv.mensaje}</div>`;
+      return;
+    }
+
+    mesas = dMesas.mesas || [];
+
+    invitados = (dInv.invitados || []).map(i => ({
+      ...i,
+      idInvitado: i.idInvitado || i.id_invitado || "",
+      nombreInvitado: i.nombreInvitado || i.nombre_invitado || i.nombre || "",
+      tipo: i.tipo || "invitado",
+      grupoOrigen: i.grupoOrigen || i.grupo_origen || "",
+      mesa: i.mesa || ""
+    }));
+
+    console.log("MESAS NORMALIZADAS:", mesas);
+    console.log("INVITADOS NORMALIZADOS:", invitados);
+
+    if(!invitados.length){
+      document.getElementById("listaPendientes").innerHTML =
+        `<div style="color:red;font-weight:bold;">No se cargaron invitados. Revisar endpoint listarInvitadosMesas.</div>`;
+      return;
+    }
+
+    render();
+
+  }catch(error){
+    console.error("ERROR CARGANDO DATOS:", error);
+
+    document.getElementById("listaPendientes").innerHTML =
+      `<div style="color:red;font-weight:bold;">Error cargando datos desde Apps Script.</div>`;
   }
-
-  render();
 }
 
 function render(){
