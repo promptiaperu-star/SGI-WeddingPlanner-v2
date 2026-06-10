@@ -430,14 +430,22 @@ function generarLinksYMensajes() {
     const linkConfirmacion = `${urlConfirmacionBase}?boda=${encodeURIComponent(codigoBoda)}&id=${encodeURIComponent(idInvitado)}`;
 
     const mensaje = construirMensajeDesdePlantillaSGI_(plantilla.mensaje, {
-      INVITADO: invitado,
-      NOVIOS: boda.novios,
-      PASES: row[idx.pases],
-      CIUDAD: boda.ciudad,
-      FECHA_BODA: formatearFechaLargaSGI_(boda.fechaBoda),
-      FECHA_CIERRE: formatearFechaLargaSGI_(boda.cierreConfirmacion),
-      LINK_CONFIRMACION: linkConfirmacion
-    });
+     INVITADO: invitado,
+     NOVIOS: boda.novios,
+     PASES: row[idx.pases],
+     CIUDAD: boda.ciudad,
+
+     FECHA_BODA: formatearFechaLargaSGI_(boda.fechaBoda),
+     FECHA_CIERRE: formatearFechaLargaSGI_(boda.cierreConfirmacion),
+
+     EMOJI_SALUDO: String.fromCodePoint(0x1F90D),      // 🤍
+     EMOJI_FECHA: String.fromCodePoint(0x1F4C5),       // 📅
+     EMOJI_UBICACION: String.fromCodePoint(0x1F4CD),   // 📍
+     EMOJI_CEREMONIA: String.fromCodePoint(0x1F54A),   // 🕊️
+     EMOJI_FIESTA: String.fromCodePoint(0x1F38A),      // 🎊
+
+     LINK_CONFIRMACION: linkConfirmacion
+  });
 
     const celular = construirCelularWhatsappSGI_(row[idx.celular], paisWhatsapp);
     const urlWhatsapp = celular
