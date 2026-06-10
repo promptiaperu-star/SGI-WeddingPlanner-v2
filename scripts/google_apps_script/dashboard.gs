@@ -434,8 +434,8 @@ function generarLinksYMensajes() {
       NOVIOS: boda.novios,
       PASES: row[idx.pases],
       CIUDAD: boda.ciudad,
-      FECHA_BODA: formatearFechaSGI_(boda.fechaBoda),
-      FECHA_CIERRE: formatearFechaSGI_(boda.cierreConfirmacion),
+      FECHA_BODA: formatearFechaLargaSGI_(boda.fechaBoda),
+      FECHA_CIERRE: formatearFechaLargaSGI_(boda.cierreConfirmacion),
       LINK_CONFIRMACION: linkConfirmacion
     });
 
@@ -897,8 +897,18 @@ function formatearFechaCompleta_(fecha) {
   return String(fecha || "");
 }
 
-function formatearFechaSGI_(fecha) {
-  return formatearFechaCompleta_(fecha);
+function formatearFechaLargaSGI_(fecha) {
+  if (!(fecha instanceof Date)) return String(fecha || "");
+
+  const dias = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+  const meses = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+
+  const diaSemana = dias[fecha.getDay()];
+  const dia = Utilities.formatDate(fecha, Session.getScriptTimeZone(), "dd");
+  const mes = meses[fecha.getMonth()];
+  const anio = Utilities.formatDate(fecha, Session.getScriptTimeZone(), "yyyy");
+
+  return `${diaSemana}, ${dia} de ${mes} del ${anio}`;
 }
 
 function normalizarTexto_(valor) {
