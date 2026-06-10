@@ -1089,8 +1089,7 @@ function listarInvitadosMesas_(codigoBoda) {
   };
 }
 
-function guardarAsignacionMesas_(codigoBoda, payloadJson) {
-
+function guardarAsignacionMesas_(codigoBoda, payloadEntrada) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hoja = ss.getSheetByName("Asignacion_Mesas");
 
@@ -1101,48 +1100,47 @@ function guardarAsignacionMesas_(codigoBoda, payloadJson) {
     };
   }
 
-  const payload = JSON.parse(payloadJson || "[]");
+  let payload = payloadEntrada;
+
+  if (typeof payloadEntrada === "string") {
+    payload = JSON.parse(payloadEntrada || "[]");
+  }
 
   if (!Array.isArray(payload)) {
     return {
       error: true,
-      mensaje: "Payload inválido."
+      mensaje: "Payload inválido. No es una lista."
     };
   }
 
   const data = hoja.getDataRange().getValues();
 
-  if (data.length > 1) {
-    for (let i = data.length - 1; i >= 1; i--) {
-      if (String(data[i][0]).trim() === String(codigoBoda).trim()) {
-        hoja.deleteRow(i + 1);
-      }
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (String(data[i][0]).trim() === String(codigoBoda).trim()) {
+      hoja.deleteRow(i + 1);
     }
   }
 
-  let registros = 0;
+  const filas = payload
+    .map(item => [
+      codigoBoda,
+      item.mesa || "",
+      item.idInvitado || item.id_invitado || "",
+      item.nombreInvitado || item.nombre_invitado || item.nombre || "",
+      item.tipo || "",
+      item.grupoOrigen || item.grupo_origen || "",
+      new Date()
+    ])
+    .filter(fila => fila[1] && fila[2] && fila[3]);
 
-  payload.forEach(item => {
-
-    if (!item.id_invitado || !item.mesa) return;
-
-    hoja.appendRow([
-      codigoBoda,                     // codigo_boda
-      item.mesa,                      // mesa
-      item.id_invitado,               // id_invitado
-      item.nombre_invitado || "",     // nombre_invitado
-      item.tipo || "",                // tipo
-      item.grupo_origen || "",        // grupo_origen
-      new Date()                      // fecha_asignacion
-    ]);
-
-    registros++;
-  });
+  if (filas.length > 0) {
+    hoja.getRange(hoja.getLastRow() + 1, 1, filas.length, 7).setValues(filas);
+  }
 
   return {
     error: false,
     mensaje: "Distribución de mesas guardada correctamente.",
-    registros: registros
+    registros: filas.length
   };
 }
 
