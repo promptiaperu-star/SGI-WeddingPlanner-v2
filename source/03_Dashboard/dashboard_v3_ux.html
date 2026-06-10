@@ -145,7 +145,22 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica
   <section id="mesas" class="screen">
     <button class="btn secondary back" onclick="volverDetalle()">← Volver al Dashboard de boda</button>
     <div class="header"><h1>Distribución de mesas</h1><p id="tituloMesas"></p></div>
-    <div class="section"><div class="alert">Módulo pendiente de implementación.</div></div>
+    <div class="section">
+
+     <div class="action-grid">
+      <button class="btn" onclick="descargarReporteMesasExcel()">
+      Descargar Excel
+      </button>
+
+      <button class="btn secondary" onclick="descargarReporteMesasPDF()">
+      Descargar PDF
+      </button>
+     </div>
+
+     <div id="reporteMesasCont" class="table-wrap loading">
+      Cargando distribución de mesas...
+     </div>
+
   </section>
 </div>
 
@@ -240,8 +255,9 @@ function abrirModulo(tipo){
     document.getElementById("tituloReporteInvitados").innerText=titulo;
     cargarReporteInvitados();
     cambiarPantalla("reporteInvitados");
-  }else if(tipo==="mesas"){
-    document.getElementById("tituloMesas").innerText=titulo;
+  } else if(tipo === "mesas"){
+    document.getElementById("tituloMesas").innerText = titulo;
+    cargarReporteMesas();
     cambiarPantalla("mesas");
   }
 }
@@ -492,6 +508,135 @@ function descargarArchivoBase64_(nombreArchivo, mimeType, base64){
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(link.href);
+}
+
+async function cargarReporteMesas(){
+  const cont = document.getElementById("reporteMesasCont");
+  cont.innerHTML = "Cargando distribución de mesas...";
+
+  try{
+    const res = await fetch(`${WEBAPP_URL}?accion=reporteMesas&boda=${encodeURIComponent(bodaActual.codigo)}`);
+    const data = await res.json();
+
+    if(data.error){
+      cont.innerHTML = `<div class="alert">${data.mensaje}</div>`;
+      return;
+    }
+
+    cont.innerHTML = `
+      <table class="sgi-table">
+        <thead>
+          <tr>
+            <th>Mesa</th>
+            <th>Capacidad</th>
+            <th>Tipo</th>
+            <th>Invitados asignados</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${(data.reporte || []).map(m => `
+            <tr>
+              <td>${m.mesa || ""}</td>
+              <td>${m.capacidad || ""}</td>
+              <td>${m.tipoMesa || ""}</td>
+              <td>${(m.invitados || []).map(i => i.nombreInvitado || "").join("<br>")}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  }catch(error){
+    cont.innerHTML = `<div class="alert">Error cargando distribución de mesas.</div>`;
+  }
+}
+
+function descargarReporteMesasExcel(){
+
+  if(!bodaActual){
+    alert("No hay boda seleccionada.");
+    return;
+  }
+
+  const nombreArchivo = `Distribucion_Mesas_${bodaActual.codigo}.xls`;
+
+  let tabla = document.getElementById("reporteMesasCont").innerHTML;
+
+  const contenido = `
+    <html>
+    <head>
+      <meta charset="utf-8">
+    </head>
+    <body>
+      ${tabla}
+    </body>
+    </html>
+  `;
+
+  const blob = new Blob(
+    [contenido],
+    { type: "application/vnd.ms-excel" }
+  );
+
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = nombreArchivo;
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(link.href);
+}
+
+function descargarReporteMesasPDF(){
+
+  const contenido =
+    document.getElementById("reporteMesasCont").innerHTML;
+
+  const ventana = window.open("", "_blank");
+
+  ventana.document.write(`
+    <html>
+    <head>
+      <title>Distribución de Mesas</title>
+
+      <style>
+        body{
+          font-family: Arial, sans-serif;
+          padding:20px;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+        }
+
+        th, td{
+          border:1px solid #ccc;
+          padding:8px;
+          text-align:left;
+        }
+
+        th{
+          background:#f3f3f3;
+        }
+      </style>
+
+    </head>
+
+    <body>
+      <h2>Distribución de Mesas</h2>
+      ${contenido}
+    </body>
+
+    </html>
+  `);
+
+  ventana.document.close();
+
+  setTimeout(() => {
+    ventana.print();
+  }, 500);
 }
 
 function descargarReportePDF(){
