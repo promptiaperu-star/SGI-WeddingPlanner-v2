@@ -462,7 +462,7 @@ function generarLinksYMensajes() {
      EMOJI_SALUDO: String.fromCodePoint(0x1F90D),      // 🤍
      EMOJI_FECHA: String.fromCodePoint(0x1F4C5),       // 📅
      EMOJI_UBICACION: String.fromCodePoint(0x1F4CD),   // 📍
-     EMOJI_CEREMONIA: String.fromCodePoint(0x1F54A),   // ⛪
+     EMOJI_CEREMONIA: String.fromCodePoint(0x26EA),   // ⛪
      EMOJI_FIESTA: String.fromCodePoint(0x1F38A),      // 🎊
 
      LINK_CONFIRMACION: linkConfirmacion
