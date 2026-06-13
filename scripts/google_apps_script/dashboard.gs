@@ -986,14 +986,23 @@ function construirMensajeDesdePlantillaSGI_(plantilla, valores) {
   return mensaje;
 }
 
-function construirCelularWhatsappSGI_(celular, pais) {
+function construirCelularWhatsappSGI(celular, pais) {
   let numero = String(celular || "").replace(/\D/g, "");
 
   if (!numero) return "";
 
-  if (numero.startsWith(pais)) return numero;
+  // Si ya viene con código internacional, no agregar código de país
+  if (numero.length > 9) {
+    return numero;
+  }
 
-  return pais + numero;
+  // Si es celular peruano de 9 dígitos, agregar 51
+  if (numero.length === 9) {
+    return "51" + numero;
+  }
+
+  // Caso no estándar: devolver limpio para revisión manual
+  return numero;
 }
 
 function listarMesas_(codigoBoda) {
