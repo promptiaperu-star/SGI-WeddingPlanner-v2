@@ -986,7 +986,7 @@ function construirMensajeDesdePlantillaSGI_(plantilla, valores) {
   return mensaje;
 }
 
-function construirCelularWhatsappSGI(celular, pais) {
+function construirCelularWhatsappSGI_(celular, pais) {
   let numero = String(celular || "").replace(/\D/g, "");
 
   if (!numero) return "";
