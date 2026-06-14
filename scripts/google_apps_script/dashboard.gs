@@ -143,14 +143,20 @@ function obtenerDashboard() {
       let noUtilizados = 0;
 
       confirmaciones.forEach(r => {
+        const idInvitado = String(r[idxC.id_invitado] || "").trim();
         const nombre = String(r[idxC.invitado] || "").trim();
         const asiste = String(r[idxC.asiste] || "").trim().toUpperCase();
         const pasesConfirmados = Number(r[idxC.pases]) || 0;
-        const pasesNoUtilizados = Number(r[idxC.pases_liberados]) || 0;
+        const pasesNoUtilizados = Number(r[idxC.pases_noutilizados]) || 0;
 
-        const inv = invitados.find(i =>
-          String(i[idxI.invitado_principal] || "").trim().toUpperCase() === nombre.toUpperCase()
-        );
+        const inv = invitados.find(i => {
+         const idInvLista = String(i[idxI.id_invitado] || "").trim();
+         const nombreLista = String(i[idxI.invitado_principal] || "").trim().toUpperCase();
+
+         return idInvitado
+          ? idInvLista === idInvitado
+          : nombreLista === nombre.toUpperCase();
+        });
 
         const pasesAsignados = inv ? (Number(inv[idxI.pases]) || 0) : pasesConfirmados;
 
@@ -168,12 +174,19 @@ function obtenerDashboard() {
       const liberados = noAsisten + noUtilizados;
       const avance = totalPases ? Math.round((siAsisten / totalPases) * 100) : 0;
 
+      const estadoCalculado =
+       avance >= 100 ? "Confirmación completa" :
+       pendientes > 0 && Number(calcularDiasCierreSGI_(b[idxB.cierre_confirmacion])) <= 0 ? "Cierre vencido con pendientes" :
+       pendientes > 0 ? "Esperando respuestas" :
+       "Sin pendientes";
+
       const evolucion = construirEvolucionSGI_(confirmaciones, idxC);
       const alertas = construirAlertasSGI_(codigo, totalPases, siAsisten, noAsisten, pendientes, noUtilizados);
 
       return {
         codigo,
         nombre: b[idxB.novios] || "",
+        estado: b[idxB.estado] || estadoCalculado,
         fechaBoda: formatearFechaLargaSGI_(b[idxB.fecha_boda]),
         ciudad: b[idxB.ciudad] || "",
         fechaEnvio: formatearFechaLargaSGI_(b[idxB.inicio_confirmacion]),
@@ -185,7 +198,7 @@ function obtenerDashboard() {
         noAsisten,
         pendientes,
         noUtilizados,
-        pasesLiberados: noUtilizados,
+        pasesLiberados: liberados,
         liberados,
         avance,
         evolucion,
@@ -503,15 +516,16 @@ function registrarConfirmacionInvitado(data) {
     : Math.max(pasesAsignados - pasesConfirmados, 0);
 
   hoja.appendRow([
-    new Date(),
-    codigoBoda,
-    invitado,
-    asiste,
-    pasesConfirmados,
-    pasesLiberados,
-    data.acompanantes || "",
-    "",
-    new Date()
+   new Date(),
+   data.codigoBoda || "",
+   data.invitado || "",
+   data.asiste || "",
+   data.pases || 0,
+   data.pasesNoUtilizados || 0,
+   data.acompanantes || "",
+   data.ip || "",
+   new Date(),
+   data.idInvitado || ""
   ]);
 
   return {
