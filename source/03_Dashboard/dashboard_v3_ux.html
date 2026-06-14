@@ -29,6 +29,11 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica
 .table-wrap{overflow-x:auto}.sgi-table{width:100%;border-collapse:collapse;background:#fff}.sgi-table th,.sgi-table td{border:1px solid var(--border);padding:10px;text-align:left;font-size:13px}.sgi-table th{background:#111;color:#fff}.status-pill{display:inline-block;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700}.status-pending{background:#fff4cc}.status-sent{background:#dff5e1}.status-api{background:#e7e7ff}.action-grid{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 18px}
 .send-panel{display:grid;grid-template-columns:1fr 1fr;gap:20px}.send-card{border:1px solid var(--border);border-radius:14px;padding:20px;background:#fff}.send-card h3{margin-top:0}.msg-preview{white-space:pre-wrap;background:#f7f7f7;border:1px solid var(--border);border-radius:12px;padding:16px;max-height:360px;overflow:auto;font-size:13px;line-height:1.5}
 @media(max-width:900px){.kpi-grid,.boda-list,.bento,.equation,.flow-grid,.send-panel{grid-template-columns:1fr}.op{display:none}.header h1,.detail-title{font-size:32px}}
+.metric.muted-box{
+  background:#f3f3f3;
+  border-color:#d8d8d8;
+  box-shadow:none;
+}
 </style>
 </head>
 <body>
@@ -65,9 +70,9 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica
     <div class="equation">
       <div class="metric"><div class="num" id="totalPases">0</div><div class="name">Total pases</div></div><div class="op">=</div>
       <div class="metric"><div class="num" id="siAsisten">0</div><div class="name">Sí asisten</div></div><div class="op">+</div>
-      <div class="metric"><div class="num" id="noAsisten">0</div><div class="name">No asisten</div></div><div class="op">+</div>
+      <div class="metric muted-box"><div class="num" id="noAsisten">0</div><div class="name">No asisten</div></div>
       <div class="metric"><div class="num" id="pendientes">0</div><div class="name">Pendientes de responder</div></div><div class="op">+</div>
-      <div class="metric"><div class="num" id="noUtilizados">0</div><div class="name">No utilizados</div></div>
+      <div class="metric muted-box"><div class="num" id="noUtilizados">0</div><div class="name">No utilizados</div></div>
     </div>
 
     <div class="chart-card"><h2>📊 Distribución de pases</h2><div class="bar-area" id="barras"></div><div class="note">Nota: la información no incluye a los novios. En el reporte final deberán agregarse ambos para calcular el total de platos.</div></div>
@@ -214,7 +219,16 @@ function abrirBoda(codigo){
   bodaActual=b;
   cambiarPantalla("detalle");
   document.getElementById("nombreBoda").innerText=b.nombre;
-  document.getElementById("infoBoda").innerHTML=`<li>Fecha boda: ${b.fechaBoda}</li><li>Ciudad: ${b.ciudad}</li><li>Fecha envío mensajes: ${b.inicioConfirmacion}</li><li>Fecha máxima confirmaciones: ${b.cierreConfirmacion}</li><li>Días para cierre: ${b.diasCierre}</li>`;
+  const noUtilizadosInfo = Number(b.noUtilizados ?? b.pasesLiberados ?? 0);
+  const liberadosInfo = (Number(b.noAsisten) || 0) + noUtilizadosInfo;
+
+  document.getElementById("infoBoda").innerHTML =
+  `<li>Fecha boda: ${b.fechaBoda}</li>
+   <li>Ciudad: ${b.ciudad}</li>
+   <li>Fecha envío mensajes: ${b.fechaEnvio}</li>
+   <li>Fecha máxima confirmaciones: ${b.cierreConfirmacion}</li>
+   <li>Días para cierre: ${b.diasCierre}</li>
+   <li><strong>Pases liberados: ${liberadosInfo}</strong></li>`;
   const fotoBoda = document.getElementById("fotoBoda");
 
   if (b.fotoUrl) {
@@ -671,33 +685,70 @@ function descargarReportePDF(){
 
 function dibujarBarras(b){
   const noUtilizados = Number(b.noUtilizados ?? b.pasesLiberados ?? 0);
-  const totalCuadre = Number(b.totalPases) || ((Number(b.siAsisten)||0) + (Number(b.noAsisten)||0) + (Number(b.pendientes)||0) + noUtilizados);
-  const estados=[["Sí asisten",Number(b.siAsisten)||0],["No asisten",Number(b.noAsisten)||0],["Pendientes",Number(b.pendientes)||0],["No utilizados", noUtilizados]];
-  document.getElementById("barras").innerHTML=estados.map(e=>{
-    const pct=Math.min(240,Math.max(10,Math.round((e[1]/total)*240)));
-    return`<div class="bar-wrap"><div class="vbar" style="height:${pct}px"></div><div class="bar-label">${e[0]}<br><strong>${e[1]}</strong></div></div>`;
+  const total = Math.max(Number(b.totalPases) || 0, 1);
+
+  const estados = [
+    ["Sí asisten", Number(b.siAsisten) || 0],
+    ["No asisten", Number(b.noAsisten) || 0],
+    ["Pendientes", Number(b.pendientes) || 0],
+    ["No utilizados", noUtilizados]
+  ];
+
+  document.getElementById("barras").innerHTML = estados.map(e => {
+    const pct = Math.min(240, Math.max(10, Math.round((e[1] / total) * 240)));
+    return `
+      <div class="bar-wrap">
+        <div class="bar" style="height:${pct}px"></div>
+        <div class="bar-label">${e[0]}<br><strong>${e[1]}</strong></div>
+      </div>
+    `;
   }).join("");
 }
 
 function dibujarLinea(evolucion){
-  const svg=document.getElementById("lineChart");
-  const yAxis=document.getElementById("yAxis");
-  const xAxis=document.getElementById("xAxis");
-  svg.innerHTML="";yAxis.innerHTML="";xAxis.innerHTML="";
-  if(!evolucion||evolucion.length===0){
-    svg.innerHTML=`<text x="40" y="145" fill="#6f6f6b" font-size="16">Sin confirmaciones registradas</text>`;
-    yAxis.innerHTML=`<span>0</span><span>0</span><span>0</span><span>0</span><span>0</span>`;
+  const svg = document.getElementById("lineChart");
+  const yAxis = document.getElementById("yAxis");
+  const xAxis = document.getElementById("xAxis");
+
+  svg.innerHTML = "";
+  yAxis.innerHTML = "";
+  xAxis.innerHTML = "";
+
+  if (!evolucion || !evolucion.length) {
+    svg.innerHTML = `<text x="40" y="145" fill="#6f6f6f" font-size="16">Sin confirmaciones registradas</text>`;
+    yAxis.innerHTML = "<span>0</span><span>0</span><span>0</span><span>0</span><span>0</span>";
     return;
   }
-  const data=evolucion.map(e=>Number(e.pases)||0);
-  const fechas=evolucion.map(e=>e.fecha);
-  const max=Math.max(...data,1);
-  const escala=[max,Math.round(max*.75),Math.round(max*.5),Math.round(max*.25),0];
-  yAxis.innerHTML=escala.map(v=>`<span>${v}</span>`).join("");
-  xAxis.innerHTML=fechas.map(f=>`<span>${f}</span>`).join("");
-  const puntosArray=data.map((v,i)=>{const x=data.length===1?410:(i/(data.length-1))*760+30;const y=260-(v/max)*220;return{x,y,v}});
-  const puntos=puntosArray.map(p=>`${p.x},${p.y}`).join(" ");
-  svg.innerHTML=`<polyline points="${puntos}" fill="none" stroke="#111111" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>${puntosArray.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="5" fill="#111111"></circle>`).join("")}`;
+
+  const data = evolucion.map(e => ({
+    fecha: e.fecha,
+    pases: Number(e.pases) || 0
+  }));
+
+  const max = Math.max(...data.map(d => d.pases), 1);
+  const puntos = data.map((d, i) => {
+    const x = data.length === 1 ? 410 : (i / (data.length - 1)) * 760 + 30;
+    const y = 260 - (d.pases / max) * 220;
+    return { x, y, fecha: d.fecha, pases: d.pases };
+  });
+
+  svg.innerHTML = `
+    <polyline points="${puntos.map(p => `${p.x},${p.y}`).join(" ")}"
+      fill="none" stroke="#111111" stroke-width="4"
+      stroke-linecap="round" stroke-linejoin="round"></polyline>
+    ${puntos.map(p => `
+      <circle cx="${p.x}" cy="${p.y}" r="5" fill="#111111"></circle>
+      <text x="${p.x - 10}" y="${p.y - 12}" font-size="12">${p.pases}</text>
+    `).join("")}
+  `;
+
+  yAxis.innerHTML = [max, Math.round(max * .75), Math.round(max * .5), Math.round(max * .25), 0]
+    .map(v => `<span>${v}</span>`)
+    .join("");
+
+  xAxis.innerHTML = data
+    .map(d => `<span>${d.fecha}</span>`)
+    .join("");
 }
 
 function pintarAlertasBoda(codigo){
