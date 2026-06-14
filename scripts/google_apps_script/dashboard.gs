@@ -748,34 +748,55 @@ function reporteInvitados(codigoBoda) {
     .filter(c => String(c.codigoBoda).trim() === String(codigoBoda).trim());
 
   const confirmacionesPorInvitado = {};
+
   confirmaciones.forEach(c => {
-    confirmacionesPorInvitado[normalizarTexto_(c.invitado)] = c;
+    const key = c.idInvitado
+      ? String(c.idInvitado).trim()
+      : normalizarTexto_(c.invitado);
+
+    confirmacionesPorInvitado[key] = c;
   });
 
   const reporte = invitados.map(i => {
-    const conf = confirmacionesPorInvitado[normalizarTexto_(i.invitadoPrincipal)];
+    const keyInvitado = i.idInvitado
+      ? String(i.idInvitado).trim()
+      : normalizarTexto_(i.invitadoPrincipal);
+
+    const conf = confirmacionesPorInvitado[keyInvitado];
 
     if (!conf) {
       return {
+        categoria: i.categoria || "",
         invitadoPrincipal: i.invitadoPrincipal,
         pasesAsignados: i.pases,
         estado: "PENDIENTE",
         pasesConfirmados: 0,
-        pasesLiberados: 0,
-        acompanantes: "",
+        pasesNoUtilizados: 0,
+        acompañantes: "",
         fechaConfirmacion: ""
       };
     }
 
     return {
+      categoria: i.categoria || "",
       invitadoPrincipal: i.invitadoPrincipal,
       pasesAsignados: i.pases,
-      estado: conf.asiste === "si" ? "SI ASISTE" : "NO ASISTE",
+      estado: conf.asiste === "SI" ? "SI ASISTE" : "NO ASISTE",
       pasesConfirmados: conf.pases,
-      pasesLiberados: conf.pasesLiberados,
-      acompanantes: conf.acompanantes,
+      pasesNoUtilizados: conf.pasesNoUtilizados || 0,
+      acompañantes: conf.acompanantes,
       fechaConfirmacion: formatearFechaCompleta_(conf.fecha)
     };
+  });
+
+  reporte.sort((a, b) => {
+    const catA = String(a.categoria || "").toUpperCase();
+    const catB = String(b.categoria || "").toUpperCase();
+
+    if (catA !== catB) return catA.localeCompare(catB);
+
+    return String(a.invitadoPrincipal || "")
+      .localeCompare(String(b.invitadoPrincipal || ""));
   });
 
   return {
