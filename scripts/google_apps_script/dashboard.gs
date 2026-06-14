@@ -105,33 +105,156 @@ function jsonOutput_(data) {
 function obtenerDashboard() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
 
-  const hojaBodas = ss.getSheetByName("Bodas");
-  const hojaInvitados = ss.getSheetByName("Invitados");
-  const hojaConfirmaciones = ss.getSheetByName("Confirmaciones");
+  const shBodas = ss.getSheetByName("Bodas");
+  const shInv = ss.getSheetByName("Invitados");
+  const shConf = ss.getSheetByName("Confirmaciones");
 
-  if (!hojaBodas || !hojaInvitados || !hojaConfirmaciones) {
-    return {
-      error: true,
-      mensaje: "Faltan hojas requeridas: Bodas, Invitados o Confirmaciones."
-    };
+  if (!shBodas || !shInv || !shConf) {
+    return { error: true, mensaje: "Faltan hojas requeridas: Bodas, Invitados o Confirmaciones." };
   }
 
-  const bodas = leerBodas_(hojaBodas);
-  const invitados = leerInvitados_(hojaInvitados);
-  const confirmaciones = leerConfirmaciones_(hojaConfirmaciones);
+  const bodasData = shBodas.getDataRange().getValues();
+  const invData = shInv.getDataRange().getValues();
+  const confData = shConf.getDataRange().getValues();
 
-  const bodasActivas = bodas.map(boda =>
-    construirResumenBoda_(boda, invitados, confirmaciones)
-  );
+  const hB = bodasData[0];
+  const hI = invData[0];
+  const hC = confData[0];
+
+  const idxB = obtenerIndicesSGI_(hB);
+  const idxI = obtenerIndicesSGI_(hI);
+  const idxC = obtenerIndicesSGI_(hC);
+
+  const bodas = bodasData.slice(1)
+    .filter(r => r[idxB.codigo_boda])
+    .map(b => {
+      const codigo = String(b[idxB.codigo_boda]).trim();
+
+      const invitados = invData.slice(1)
+        .filter(r => String(r[idxI.codigo_boda]).trim() === codigo);
+
+      const confirmaciones = confData.slice(1)
+        .filter(r => String(r[idxC.codigo_boda]).trim() === codigo);
+
+      const totalPases = invitados.reduce((s, r) => s + (Number(r[idxI.pases]) || 0), 0);
+
+      let siAsisten = 0;
+      let noAsisten = 0;
+      let noUtilizados = 0;
+
+      confirmaciones.forEach(r => {
+        const nombre = String(r[idxC.invitado] || "").trim();
+        const asiste = String(r[idxC.asiste] || "").trim().toUpperCase();
+        const pasesConfirmados = Number(r[idxC.pases]) || 0;
+        const pasesNoUtilizados = Number(r[idxC.pases_liberados]) || 0;
+
+        const inv = invitados.find(i =>
+          String(i[idxI.invitado_principal] || "").trim().toUpperCase() === nombre.toUpperCase()
+        );
+
+        const pasesAsignados = inv ? (Number(inv[idxI.pases]) || 0) : pasesConfirmados;
+
+        if (asiste === "SI") {
+          siAsisten += pasesConfirmados;
+          noUtilizados += pasesNoUtilizados || Math.max(pasesAsignados - pasesConfirmados, 0);
+        }
+
+        if (asiste === "NO") {
+          noAsisten += pasesAsignados;
+        }
+      });
+
+      const pendientes = Math.max(totalPases - siAsisten - noAsisten - noUtilizados, 0);
+      const liberados = noAsisten + noUtilizados;
+      const avance = totalPases ? Math.round((siAsisten / totalPases) * 100) : 0;
+
+      const evolucion = construirEvolucionSGI_(confirmaciones, idxC);
+      const alertas = construirAlertasSGI_(codigo, totalPases, siAsisten, noAsisten, pendientes, noUtilizados);
+
+      return {
+        codigo,
+        nombre: b[idxB.novios] || "",
+        fechaBoda: formatearFechaLargaSGI_(b[idxB.fecha_boda]),
+        ciudad: b[idxB.ciudad] || "",
+        fechaEnvio: formatearFechaLargaSGI_(b[idxB.inicio_confirmacion]),
+        cierreConfirmacion: formatearFechaLargaSGI_(b[idxB.cierre_confirmacion]),
+        diasCierre: calcularDiasCierreSGI_(b[idxB.cierre_confirmacion]),
+        fotoUrl: b[idxB.foto_url] || "",
+        totalPases,
+        siAsisten,
+        noAsisten,
+        pendientes,
+        noUtilizados,
+        pasesLiberados: noUtilizados,
+        liberados,
+        avance,
+        evolucion,
+        alertas
+      };
+    });
 
   return {
     error: false,
-    fechaActualizacion: formatearFechaCompleta_(new Date()),
-    totalBodas: bodasActivas.length,
-    bodasActivas: bodasActivas,
-    alertas: construirAlertas_(bodasActivas),
-    resumen: construirResumenGeneral_(bodasActivas)
+    bodas,
+    alertas: []
   };
+}
+
+function construirEvolucionSGI_(confirmaciones, idxC) {
+  const acumulado = {};
+
+  confirmaciones.forEach(r => {
+    const asiste = String(r[idxC.asiste] || "").trim().toUpperCase();
+    if (asiste !== "SI") return;
+
+    const fecha = r[idxC.fecha];
+    const fechaTxt = fecha instanceof Date
+      ? Utilities.formatDate(fecha, Session.getScriptTimeZone(), "dd/MM")
+      : String(fecha || "").substring(0, 5);
+
+    acumulado[fechaTxt] = (acumulado[fechaTxt] || 0) + (Number(r[idxC.pases]) || 0);
+  });
+
+  let suma = 0;
+
+  return Object.keys(acumulado).sort().map(f => {
+    suma += acumulado[f];
+    return {
+      fecha: f,
+      pases: suma
+    };
+  });
+}
+
+function construirAlertasSGI_(codigo, totalPases, siAsisten, noAsisten, pendientes, noUtilizados) {
+  const alertas = [];
+
+  if (pendientes > 0) {
+    alertas.push(`Boda ${codigo}: quedan ${pendientes} pases pendientes de responder.`);
+  }
+
+  if (noUtilizados > 0) {
+    alertas.push(`Boda ${codigo}: hay ${noUtilizados} pases no utilizados por invitados que sí asistirán.`);
+  }
+
+  if ((noAsisten + noUtilizados) > 0) {
+    alertas.push(`Boda ${codigo}: pases liberados disponibles: ${noAsisten + noUtilizados}.`);
+  }
+
+  if (totalPases > 0 && siAsisten / totalPases < 0.6) {
+    alertas.push(`Boda ${codigo}: avance de confirmación menor al 60%.`);
+  }
+
+  return alertas;
+}
+
+function calcularDiasCierreSGI_(fechaCierre) {
+  if (!(fechaCierre instanceof Date)) return "";
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const cierre = new Date(fechaCierre);
+  cierre.setHours(0, 0, 0, 0);
+  return Math.max(Math.ceil((cierre - hoy) / (1000 * 60 * 60 * 24)), 0);
 }
 
 function leerBodas_(hoja) {
