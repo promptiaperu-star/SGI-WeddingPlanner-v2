@@ -67,7 +67,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica
       <div class="metric"><div class="num" id="siAsisten">0</div><div class="name">Sí asisten</div></div><div class="op">+</div>
       <div class="metric"><div class="num" id="noAsisten">0</div><div class="name">No asisten</div></div><div class="op">+</div>
       <div class="metric"><div class="num" id="pendientes">0</div><div class="name">Pendientes de responder</div></div><div class="op">+</div>
-      <div class="metric"><div class="num" id="liberados">0</div><div class="name">Liberados</div></div>
+      <div class="metric"><div class="num" id="noUtilizados">0</div><div class="name">No utilizados</div></div>
     </div>
 
     <div class="chart-card"><h2>📊 Distribución de pases</h2><div class="bar-area" id="barras"></div><div class="note">Nota: la información no incluye a los novios. En el reporte final deberán agregarse ambos para calcular el total de platos.</div></div>
@@ -225,12 +225,14 @@ function abrirBoda(codigo){
   const avanceSeguro=Math.min(Math.max(Number(b.avance)||0,0),100);
   document.getElementById("avancePrincipal").innerText=avanceSeguro+"%";
   document.getElementById("avanceBar").style.width=avanceSeguro+"%";
-  const totalCuadre=(Number(b.siAsisten)||0)+(Number(b.noAsisten)||0)+(Number(b.pendientes)||0)+(Number(b.pasesLiberados)||0);
-  document.getElementById("totalPases").innerText=totalCuadre;
-  document.getElementById("siAsisten").innerText=b.siAsisten;
-  document.getElementById("noAsisten").innerText=b.noAsisten;
-  document.getElementById("pendientes").innerText=b.pendientes;
-  document.getElementById("liberados").innerText=b.pasesLiberados;
+  const noUtilizados = Number(b.noUtilizados ?? b.pasesLiberados ?? 0);
+  const liberados = (Number(b.noAsisten) || 0) + noUtilizados;
+  const totalCuadre = Number(b.totalPases) || ((Number(b.siAsisten)||0) + (Number(b.noAsisten)||0) + (Number(b.pendientes)||0) + noUtilizados);
+  document.getElementById("totalPases").innerText = totalCuadre;
+  document.getElementById("siAsisten").innerText = b.siAsisten;
+  document.getElementById("noAsisten").innerText = b.noAsisten;
+  document.getElementById("pendientes").innerText = b.pendientes;
+  document.getElementById("noUtilizados").innerText = noUtilizados;
   dibujarBarras(b);
   dibujarLinea(b.evolucion||[]);
   pintarAlertasBoda(b.codigo);
@@ -417,7 +419,7 @@ async function cargarReporteInvitados(){
             <th>Pases asignados</th>
             <th>Estado</th>
             <th>Pases confirmados</th>
-            <th>Liberados</th>
+            <th>No utilizados</th>
             <th>Acompañantes</th>
             <th>Fecha confirmación</th>
           </tr>
@@ -668,9 +670,9 @@ function descargarReportePDF(){
 }
 
 function dibujarBarras(b){
-  const totalCuadre=(Number(b.siAsisten)||0)+(Number(b.noAsisten)||0)+(Number(b.pendientes)||0)+(Number(b.pasesLiberados)||0);
-  const total=Math.max(totalCuadre||Number(b.totalPases)||1,1);
-  const estados=[["Sí asisten",Number(b.siAsisten)||0],["No asisten",Number(b.noAsisten)||0],["Pendientes",Number(b.pendientes)||0],["Liberados",Number(b.pasesLiberados)||0]];
+  const noUtilizados = Number(b.noUtilizados ?? b.pasesLiberados ?? 0);
+  const totalCuadre = Number(b.totalPases) || ((Number(b.siAsisten)||0) + (Number(b.noAsisten)||0) + (Number(b.pendientes)||0) + noUtilizados);
+  const estados=[["Sí asisten",Number(b.siAsisten)||0],["No asisten",Number(b.noAsisten)||0],["Pendientes",Number(b.pendientes)||0],["No utilizados", noUtilizados]];
   document.getElementById("barras").innerHTML=estados.map(e=>{
     const pct=Math.min(240,Math.max(10,Math.round((e[1]/total)*240)));
     return`<div class="bar-wrap"><div class="vbar" style="height:${pct}px"></div><div class="bar-label">${e[0]}<br><strong>${e[1]}</strong></div></div>`;
