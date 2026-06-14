@@ -181,7 +181,8 @@ function obtenerDashboard() {
        "Sin pendientes";
 
       const evolucion = construirEvolucionSGI_(confirmaciones, idxC);
-      const alertas = construirAlertasSGI_(codigo, totalPases, siAsisten, noAsisten, pendientes, noUtilizados);
+      const nombreBoda = b[idxB.novios] || "";
+      const alertas = construirAlertasSGI_(codigo, nombreBoda, totalPases, siAsisten, noAsisten, pendientes, noUtilizados);
 
       return {
         codigo,
@@ -240,23 +241,24 @@ function construirEvolucionSGI_(confirmaciones, idxC) {
   });
 }
 
-function construirAlertasSGI_(codigo, totalPases, siAsisten, noAsisten, pendientes, noUtilizados) {
+function construirAlertasSGI_(codigo, nombreBoda, totalPases, siAsisten, noAsisten, pendientes, noUtilizados) {
   const alertas = [];
+  const etiquetaBoda = `Boda ${codigo} - ${nombreBoda}`;
 
   if (pendientes > 0) {
-    alertas.push(`Boda ${codigo}: quedan ${pendientes} pases pendientes de responder.`);
+    alertas.push(`${etiquetaBoda}: quedan ${pendientes} pases pendientes de responder.`);
   }
 
   if (noUtilizados > 0) {
-    alertas.push(`Boda ${codigo}: hay ${noUtilizados} pases no utilizados por invitados que sí asistirán.`);
+    alertas.push(`${etiquetaBoda}: hay ${noUtilizados} pases no utilizados por invitados que sí asistirán.`);
   }
 
   if ((noAsisten + noUtilizados) > 0) {
-    alertas.push(`Boda ${codigo}: pases liberados disponibles: ${noAsisten + noUtilizados}.`);
+    alertas.push(`${etiquetaBoda}: pases liberados disponibles: ${noAsisten + noUtilizados}.`);
   }
 
   if (totalPases > 0 && siAsisten / totalPases < 0.6) {
-    alertas.push(`Boda ${codigo}: avance de confirmación menor al 60%.`);
+    alertas.push(`${etiquetaBoda}: avance de confirmación menor al 60%.`);
   }
 
   return alertas;
