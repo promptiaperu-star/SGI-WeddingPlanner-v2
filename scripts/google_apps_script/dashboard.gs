@@ -194,9 +194,10 @@ function obtenerDashboard() {
     });
 
   return {
-    error: false,
-    bodas,
-    alertas: []
+  error: false,
+  bodasActivas: bodas,
+  totalBodas: bodas.length,
+  alertasCriticas: bodas.flatMap(b => b.alertas || [])
   };
 }
 
