@@ -34,6 +34,14 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica
   border-color:#d8d8d8;
   box-shadow:none;
 }
+.info-list{
+  font-size:16px;
+  line-height:1.8;
+}
+
+.info-list li{
+  margin-bottom:6px;
+}
 </style>
 </head>
 <body>
@@ -201,16 +209,31 @@ function cambiarPantalla(id){
 }
 
 function cargarHome(){
-  document.getElementById("totalBodas").innerText=dashboardData.totalBodas||0;
-  document.getElementById("totalAlertas").innerText=(dashboardData.alertas||[]).length;
-  const cont=document.getElementById("listaBodas");
-  const alertas=document.getElementById("alertasHome");
-  cont.innerHTML="";
-  alertas.innerHTML="";
-  bodas.forEach(b=>{
-    cont.innerHTML+=`<div class="boda-card"><h3>${b.codigo} – ${b.nombre}</h3><p><strong>Fecha boda:</strong> ${b.fechaBoda}</p><p><strong>Ciudad:</strong> ${b.ciudad}</p><p><strong>Estado:</strong> ${b.estado}</p><p><strong>Avance:</strong> ${b.avance}%</p><button class="btn" onclick="abrirBoda('${b.codigo}')">Abrir Dashboard</button></div>`;
+  document.getElementById("totalBodas").innerText = dashboardData.totalBodas || 0;
+  document.getElementById("totalAlertas").innerText = (dashboardData.alertasCriticas || []).length;
+
+  const cont = document.getElementById("listaBodas");
+  const alertas = document.getElementById("alertasHome");
+
+  cont.innerHTML = "";
+  alertas.innerHTML = "";
+
+  bodas.forEach(b => {
+    cont.innerHTML += `
+      <div class="boda-card">
+        <h3>${b.codigo} – ${b.nombre}</h3>
+        <p><strong>Fecha boda:</strong> ${b.fechaBoda}</p>
+        <p><strong>Ciudad:</strong> ${b.ciudad}</p>
+        <p><strong>Estado:</strong> ${b.estado || "Sin estado"}</p>
+        <p><strong>Avance:</strong> ${b.avance || 0}%</p>
+        <button class="btn" onclick="abrirBoda('${b.codigo}')">Abrir Dashboard</button>
+      </div>
+    `;
   });
-  (dashboardData.alertas||[]).forEach(a=>{alertas.innerHTML+=`<div class="alert">${a}</div>`});
+
+  (dashboardData.alertasCriticas || []).forEach(a => {
+    alertas.innerHTML += `<div class="alert">${a}</div>`;
+  });
 }
 
 function abrirBoda(codigo){
@@ -219,8 +242,8 @@ function abrirBoda(codigo){
   bodaActual=b;
   cambiarPantalla("detalle");
   document.getElementById("nombreBoda").innerText=b.nombre;
-  const noUtilizadosInfo = Number(b.noUtilizados ?? b.pasesLiberados ?? 0);
-  const liberadosInfo = (Number(b.noAsisten) || 0) + noUtilizadosInfo;
+  const noUtilizadosInfo = Number(b.noUtilizados || 0);
+  const liberadosInfo = Number(b.liberados || b.pasesLiberados || 0);
 
   document.getElementById("infoBoda").innerHTML =
   `<li>Fecha boda: ${b.fechaBoda}</li>
@@ -685,7 +708,7 @@ function descargarReportePDF(){
 
 function dibujarBarras(b){
   const noUtilizados = Number(b.noUtilizados ?? b.pasesLiberados ?? 0);
-  const total = Math.max(Number(b.totalPases) || 0, 1);
+  const total = Math.max(Number(b.totalPases) || Number(b.siAsisten) + Number(b.noAsisten) + Number(b.pendientes) + Number(b.noUtilizados), 1);
 
   const estados = [
     ["Sí asisten", Number(b.siAsisten) || 0],
