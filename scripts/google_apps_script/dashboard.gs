@@ -942,11 +942,26 @@ function generarXlsxMultiHojaBase64_(nombreArchivo, hojas) {
 
   SpreadsheetApp.flush();
 
-  const archivo = DriveApp.getFileById(ssTemp.getId());
-  const blob = archivo.getBlob().getAs(MimeType.MICROSOFT_EXCEL);
+  const exportUrl = `https://docs.google.com/spreadsheets/d/${ssTemp.getId()}/export?format=xlsx`;
+
+  const token = ScriptApp.getOAuthToken();
+
+  const response = UrlFetchApp.fetch(exportUrl, {
+    headers: {
+     Authorization: `Bearer ${token}`
+    },
+    muteHttpExceptions: true
+  });
+
+  if (response.getResponseCode() !== 200) {
+   archivoTemp.setTrashed(true);
+   throw new Error("No se pudo exportar el archivo Excel. Código: " + response.getResponseCode());
+  }
+
+  const blob = response.getBlob().setName(nombreArchivo);
   const base64 = Utilities.base64Encode(blob.getBytes());
 
-  archivo.setTrashed(true);
+  DriveApp.getFileById(ssTemp.getId()).setTrashed(true);
 
   return {
     filename: nombreArchivo,
