@@ -832,19 +832,57 @@ function descargarReporteInvitadosXlsx(codigoBoda) {
   const data = reporteInvitados(codigoBoda);
   if (data.error) return data;
 
-  return generarXlsxBase64_(
+  const encabezados = [
+    "Invitado principal",
+    "Pases asignados",
+    "Estado",
+    "Pases confirmados",
+    "No utilizados",
+    "Acompañantes",
+    "Fecha confirmación"
+  ];
+
+  const mapFila = i => [
+    i.invitadoPrincipal || "",
+    i.pasesAsignados || 0,
+    i.estado || "",
+    i.pasesConfirmados || 0,
+    i.pasesNoUtilizados || 0,
+    i.acompanantes || "",
+    i.fechaConfirmacion || ""
+  ];
+
+  const siAsisten = data.reporte
+    .filter(i => i.estado === "SI ASISTE")
+    .map(mapFila);
+
+  const noAsisten = data.reporte
+    .filter(i => i.estado === "NO ASISTE")
+    .map(mapFila);
+
+  const pendientes = data.reporte
+    .filter(i => i.estado === "PENDIENTE")
+    .map(mapFila);
+
+  return generarXlsxMultiHojaBase64_(
     `Reporte_Invitados_${codigoBoda}.xlsx`,
-    "Reporte Invitados",
-    ["Invitado principal", "Pases asignados", "Estado", "Pases confirmados", "No utilizados", "Acompañantes", "Fecha confirmación"],
-    data.reporte.map(i => [
-      i.invitadoPrincipal || "",
-      i.pasesAsignados || 0,
-      i.estado || "",
-      i.pasesConfirmados || 0,
-      i.pasesLiberados || 0,
-      i.acompanantes || "",
-      i.fechaConfirmacion || ""
-    ])
+    [
+      {
+        nombreHoja: "Si Asisten",
+        encabezados,
+        filas: siAsisten
+      },
+      {
+        nombreHoja: "No Asisten",
+        encabezados,
+        filas: noAsisten
+      },
+      {
+        nombreHoja: "Pendientes",
+        encabezados,
+        filas: pendientes
+      }
+    ]
   );
 }
 
