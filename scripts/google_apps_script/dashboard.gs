@@ -882,6 +882,41 @@ function generarXlsxBase64_(nombreArchivo, nombreHoja, encabezados, filas) {
   };
 }
 
+function generarXlsxMultiHojaBase64_(nombreArchivo, hojas) {
+  const archivoTemp = SpreadsheetApp.create(nombreArchivo.replace(".xlsx", ""));
+  const ssTemp = SpreadsheetApp.openById(archivoTemp.getId());
+
+  const hojaInicial = ssTemp.getSheets()[0];
+
+  hojas.forEach((config, index) => {
+    const hoja = index === 0 ? hojaInicial : ssTemp.insertSheet();
+    hoja.setName(config.nombreHoja);
+
+    hoja.getRange(1, 1, 1, config.encabezados.length).setValues([config.encabezados]);
+    hoja.getRange(1, 1, 1, config.encabezados.length).setFontWeight("bold");
+
+    if (config.filas.length > 0) {
+      hoja.getRange(2, 1, config.filas.length, config.encabezados.length).setValues(config.filas);
+    }
+
+    hoja.autoResizeColumns(1, config.encabezados.length);
+  });
+
+  SpreadsheetApp.flush();
+
+  const archivo = DriveApp.getFileById(ssTemp.getId());
+  const blob = archivo.getBlob().getAs(MimeType.MICROSOFT_EXCEL);
+  const base64 = Utilities.base64Encode(blob.getBytes());
+
+  archivo.setTrashed(true);
+
+  return {
+    filename: nombreArchivo,
+    mimeType: MimeType.MICROSOFT_EXCEL,
+    base64
+  };
+}
+
 function actualizarCentroEnvios() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const hojaPanel = ss.getSheetByName("Panel_Envios");
