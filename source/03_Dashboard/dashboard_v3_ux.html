@@ -65,9 +65,9 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica
   box-shadow:none;
 }
 .info-list {
-  font-size: 18px;
-  line-height: 1.9;
-  font-weight: 500;
+  font-size: 20px;
+  line-height: 2;
+  font-weight: 600;
 }
 
 .info-list li {
@@ -314,7 +314,7 @@ function abrirBoda(codigo){
    <li>Fecha envío mensajes: ${b.fechaEnvio}</li>
    <li>Fecha máxima confirmaciones: ${b.cierreConfirmacion}</li>
    <li>Días para cierre: ${b.diasCierre}</li>
-   <li><strong>Pases liberados: ${liberadosInfo}</strong></li>`;
+   <li><strong>Pases liberados (No asisten + No utilizados): ${liberadosInfo}</strong></li>`;
   const fotoBoda = document.getElementById("fotoBoda");
 
   if (b.fotoUrl) {
@@ -804,11 +804,6 @@ function dibujarBarras(b) {
           `;
         }).join("")}
       </div>
-    </div>
-
-    <div style="display:flex;justify-content:space-between;font-size:12px;color:#555;margin-top:8px;">
-      <span>Eje Y: cantidad de pases</span>
-      <span>Eje X: tipo de pase</span>
     </div>
   `;
 }

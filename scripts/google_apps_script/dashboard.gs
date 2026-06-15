@@ -835,7 +835,7 @@ function descargarReporteInvitadosXlsx(codigoBoda) {
   return generarXlsxBase64_(
     `Reporte_Invitados_${codigoBoda}.xlsx`,
     "Reporte Invitados",
-    ["Invitado principal", "Pases asignados", "Estado", "Pases confirmados", "Liberados", "Acompañantes", "Fecha confirmación"],
+    ["Invitado principal", "Pases asignados", "Estado", "Pases confirmados", "No utilizados", "Acompañantes", "Fecha confirmación"],
     data.reporte.map(i => [
       i.invitadoPrincipal || "",
       i.pasesAsignados || 0,
